@@ -1,0 +1,19 @@
+diff --git a/src/gevent/threadpool.py b/src/gevent/threadpool.py
+index afbc868..3482546 100644
+--- a/src/gevent/threadpool.py
++++ b/src/gevent/threadpool.py
+@@ -160,12 +160,12 @@ class _WorkerGreenlet(RawGreenlet):
+                          _get_thread_trace=_get_thread_trace):
+         # pylint:disable=unused-argument
+         _sys.setprofile(_get_thread_profile())
+-        _sys.settrace(_get_thread_trace())
++        #_sys.settrace(_get_thread_trace())
+ 
+     def _after_run_task(self, func, args, kwargs, thread_result, _sys=sys):
+         # pylint:disable=unused-argument
+         _sys.setprofile(None)
+-        _sys.settrace(None)
++        #_sys.settrace(None)
+ 
+     def __run_task(self, func, args, kwargs, thread_result):
+         self._before_run_task(func, args, kwargs, thread_result)

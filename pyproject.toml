@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bringout-ofs-mockup-srv"
+version = "0.1.0"
+description = "OFS mockup server for testing fiscal device integration"
+authors = [
+    {name = "bring.out doo Sarajevo", email = "podrska@bring.out.ba"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.24.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+ofs-mockup-srv = "ofs_mockup_srv.main:main"
+
+[project.urls]
+Homepage = "https://github.com/bring-out/bringout-ofs-mockup-srv"
+Repository = "https://github.com/bring-out/bringout-ofs-mockup-srv.git"
+Issues = "https://github.com/bring-out/bringout-ofs-mockup-srv/issues"
+Documentation = "https://github.com/bring-out/0/tree/main/packages/bringout-ofs-mockup-srv/doc"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ofs_mockup_srv*"]
+
+[tool.setuptools.package-data]
+"ofs_mockup_srv" = ["*.json", "*.yaml", "*.txt"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "fastapi.*",
+    "uvicorn.*",
+]
+ignore_missing_imports = true
