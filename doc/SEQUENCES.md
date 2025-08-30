@@ -46,7 +46,8 @@ sequenceDiagram
     S-->>C: 200 "2400"
 
     C->>S: POST /api/pin ("2222")
-    S->>ST: pin_fail_count = 3; gsc = 1300
+    S->>ST: pin_fail_count = 3
+    S->>ST:  gsc = 1300
     S-->>C: 200 "1300"
 
     C->>S: GET /api/attention
