@@ -156,7 +156,7 @@ Content-Type: text/plain
 
 **Request Body:**
 ```
-1234
+0A10015
 ```
 
 **Success Response:**
@@ -489,7 +489,7 @@ Use invoice number `"ERROR"` to trigger error response:
 |-------|-------------|----------|
 | Invalid API key | Authorization header missing or incorrect | Use correct Bearer token |
 | Copy without reference | Copy/Refund missing reference document | Provide referentDocumentNumber and referentDocumentDT |
-| Invalid PIN | Wrong PIN format or value | Use 4-digit PIN (default: 1234) |
+| Invalid PIN | Wrong PIN format or value | Use 4-digit PIN (default: 0A10015) |
 
 ## Tax System
 
@@ -535,7 +535,7 @@ Modify constants in `main.py` for different test scenarios:
 
 ```python
 API_KEY = "0123456789abcdef0123456789abcdef"  # API authentication
-PIN = "1234"                                  # Security PIN
+PIN = "0A10015"                                  # Security PIN
 GSC_CODE = "9999"                            # Device status (9999=ready)
 BUSINESS_NAME = "Your Company Name"          # Company information
 BUSINESS_ADDRESS = "Your Address"

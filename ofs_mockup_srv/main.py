@@ -15,7 +15,7 @@ SEND_CIRILICA = True
 CIRILICA_E = "Е"
 CIRILICA_K = "К"
 
-PIN = "1234"
+PIN = "0A10015"
 
 # Default device General Status Code (GSC) value for startup.
 # 1300 - security element missing (error)
@@ -309,7 +309,7 @@ async def get_attention(req: Request):
 #curl --location 'http://127.0.0.1:3566/api/pin' \
 #--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
 #--header 'Content-Type: text/plain' \ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ne JSON
-#--data '1234'
+#--data '0A10015'
 
 #POST
 #Unos PIN-a bezbednosnog elementa

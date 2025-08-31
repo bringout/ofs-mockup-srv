@@ -40,7 +40,7 @@
 
 ### Authentication System
 - **API Key**: `0123456789abcdef0123456789abcdef` (hardcoded for testing)
-- **PIN**: `1234` (for security element simulation)
+- **PIN**: `0A10015` (for security element simulation)
 - **Bearer Token**: Required for all endpoints except root
 
 ### Fiscal Device Simulation
@@ -129,7 +129,7 @@ journal = "=========== FISKALNI RAČUN ===========\n" + detailed_content
 ### Configurable Constants
 ```python
 API_KEY = "0123456789abcdef0123456789abcdef"  # Authentication
-PIN = "1234"                                  # Security PIN
+PIN = "0A10015"                              # Security PIN
 GSC_CODE = "9999"                            # Device status (9999=OK, 1300=no security, 1500=PIN needed)
 BUSINESS_NAME = "Sigma-com doo Zenica"       # Company info
 BUSINESS_ADDRESS = "Ulica 7. Muslimanske brigade 77"
@@ -218,7 +218,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 curl --location 'http://localhost:8200/api/pin' \
 --header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: text/plain' \
---data '1234'
+--data '0A10015'
 ```
 
 ### Custom Configuration
@@ -228,13 +228,4 @@ Modify constants in `main.py` to customize:
 - Device status simulation
 - Language preferences
 - Error scenarios
-
-## Nix Development Support
-
-The project includes Nix flake configuration for reproducible development:
-- Python 3.12 environment setup
-- Uvicorn web server
-- Development dependencies
-- Cross-platform compatibility
-
-This mockup server provides a complete, realistic simulation of fiscal device functionality, enabling comprehensive testing and development of fiscal integration systems without requiring physical hardware or real fiscal infrastructure.
+- all scripts go to scripts/

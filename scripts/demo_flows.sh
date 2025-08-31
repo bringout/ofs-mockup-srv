@@ -7,7 +7,7 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8200}"
 API_KEY="${API_KEY:-0123456789abcdef0123456789abcdef}"
-PIN_VALUE="${PIN_VALUE:-1234}"
+PIN_VALUE="${PIN_VALUE:-0A10015}"
 MODE="${1:-all}"
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing dependency: $1" >&2; exit 1; }; }

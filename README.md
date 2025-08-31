@@ -111,7 +111,7 @@ curl -s -H "Authorization: Bearer $API" \
 curl -s -X POST \
   -H "Authorization: Bearer $API" \
   -H "Content-Type: text/plain" \
-  --data '1234' \
+  --data '0A10015' \
   http://localhost:8200/api/pin
 
 # 4) Attention now shows 9999
@@ -131,7 +131,7 @@ done
 # Attention now shows 1300; further /api/pin returns 1300
 curl -s -H "Authorization: Bearer $API" http://localhost:8200/api/attention
 curl -s -X POST -H "Authorization: Bearer $API" -H "Content-Type: text/plain" \
-  --data '1234' http://localhost:8200/api/pin
+  --data '0A10015' http://localhost:8200/api/pin
 ```
 
 Quick script: `bash scripts/demo_flows.sh all` (or `pin` / `invoice`).
@@ -176,7 +176,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 curl --location 'http://localhost:8200/api/pin' \
 --header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: text/plain' \
---data '1234'
+--data '0A10015'
 ```
 
 ### Invoice Search

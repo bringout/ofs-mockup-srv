@@ -112,7 +112,7 @@ The documentation includes various Mermaid diagrams:
 ### Basic Server Configuration
 ```python
 API_KEY = "0123456789abcdef0123456789abcdef"  # Authentication
-PIN = "1234"                                  # Security PIN
+PIN = "0A10015"                                  # Security PIN
 GSC_CODE = "9999"                            # Device status
 BUSINESS_NAME = "Your Test Company"          # Company info
 SEND_CIRILICA = True                         # Language setting
