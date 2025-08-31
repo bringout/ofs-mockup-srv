@@ -6,7 +6,7 @@ set -euo pipefail
 #   bash scripts/demo_flows.sh [all|pin|invoice]
 
 BASE_URL="${BASE_URL:-http://localhost:8200}"
-API_KEY="${API_KEY:-0123456789abcdef0123456789abcdef}"
+API_KEY="${API_KEY:-api_key_0123456789abcdef0123456789abcdef}"
 PIN_VALUE="${PIN_VALUE:-0A10015}"
 MODE="${1:-all}"
 

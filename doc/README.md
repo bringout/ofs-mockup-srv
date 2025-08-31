@@ -111,7 +111,7 @@ The documentation includes various Mermaid diagrams:
 
 ### Basic Server Configuration
 ```python
-API_KEY = "0123456789abcdef0123456789abcdef"  # Authentication
+API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # Authentication
 PIN = "0A10015"                                  # Security PIN
 GSC_CODE = "9999"                            # Device status
 BUSINESS_NAME = "Your Test Company"          # Company info
@@ -146,7 +146,7 @@ curl http://localhost:8200/
 
 # Process invoice
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{"invoiceRequest": {...}}'
 ```
@@ -158,7 +158,7 @@ from ofs_mockup_srv.main import app
 
 client = TestClient(app)
 response = client.get("/api/status", 
-    headers={"Authorization": "Bearer 0123456789abcdef0123456789abcdef"})
+    headers={"Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef"})
 assert response.status_code == 200
 ```
 

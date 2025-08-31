@@ -74,9 +74,97 @@ sequenceDiagram
     S-->>C: 200 "1500"
 ```
 
+## Regular Invoice Processing
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server (FastAPI)
+    participant V as Validator
+    participant B as Business Logic
+    participant R as Response Generator
+
+    C->>S: POST /api/invoices (Bearer API_KEY)
+    Note over C,S: Invoice data with Normal/Sale transaction
+
+    S->>S: check_api_key(req)
+    alt API key valid
+        S->>V: validate InvoiceData
+        V->>V: check invoiceType, transactionType, items, payment
+        
+        alt validation successful
+            V->>B: process Normal sale
+            B->>B: calculate totalValue from items
+            B->>B: validate payment amounts
+            B->>B: process tax calculations (labels E,D,G,A,F)
+            
+            B->>R: generate fiscal response
+            R->>R: create invoice number (AX4F7Y5L-BX4F7Y5L-XXX)
+            R->>R: format receipt journal
+            R->>R: generate tax breakdown
+            
+            R->>S: InvoiceResponse with receipt data
+            S-->>C: 200 InvoiceResponse
+            Note over S,C: Contains invoiceNumber, journal, taxItems, totalAmount
+        else validation failed
+            S-->>C: 400 Bad Request
+        end
+    else API key invalid
+        S-->>C: 401 Unauthorized
+    end
+```
+
+## Refund Invoice Processing
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server (FastAPI)
+    participant V as Validator
+    participant B as Business Logic
+    participant R as Response Generator
+
+    C->>S: POST /api/invoices (Bearer API_KEY)
+    Note over C,S: Invoice data with Normal/Refund transaction + referent document
+
+    S->>S: check_api_key(req)
+    alt API key valid
+        S->>V: validate InvoiceData
+        V->>V: check transactionType == "Refund"
+        V->>V: validate referentDocumentNumber exists
+        V->>V: validate referentDocumentDT exists
+        
+        alt validation successful
+            V->>B: process Refund transaction
+            B->>B: verify referent document (referentDocumentNumber, referentDocumentDT)
+            Note over B: Print referent document info to console
+            
+            B->>B: calculate totalValue from refund items
+            B->>B: validate refund payment amounts
+            B->>B: process tax calculations for refund
+            
+            B->>R: generate fiscal refund response
+            R->>R: create refund invoice number (AX4F7Y5L-BX4F7Y5L-XXX)
+            R->>R: format refund receipt journal
+            R->>R: generate tax breakdown for refund
+            
+            R->>S: InvoiceResponse with refund receipt data
+            S-->>C: 200 InvoiceResponse
+            Note over S,C: Contains refund receipt with original document reference
+        else missing referent document
+            S-->>C: 400 "Copy ne sadrzi referentDocumentNumber and DT"
+        end
+    else API key invalid
+        S-->>C: 401 Unauthorized
+    end
+```
+
 ```
 Notes
 - GSC codes: 1300 = security error; 1500 = PIN required; 9999 = OK (PIN entered).
 - /api/status mirrors current GSC in `gsc` list along with other status codes.
 - /api/pin accepts `text/plain` only.
+- Invoice processing requires valid Bearer token authentication.
+- Refund transactions must include referentDocumentNumber and referentDocumentDT.
+- Tax calculations based on item labels: E (10%), D (20%), G/K (0%), A (exempt), F (11%).
 ```

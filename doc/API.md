@@ -15,10 +15,10 @@ http://localhost:8200
 All endpoints except root require API key authentication via Bearer token:
 
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ```
 
-**Default API Key**: `0123456789abcdef0123456789abcdef`
+**Default API Key**: `api_key_0123456789abcdef0123456789abcdef`
 
 ## Endpoints
 
@@ -45,7 +45,7 @@ Check if the fiscal service is available and responsive.
 
 **Headers:**
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ```
 
 **Response:**
@@ -66,7 +66,7 @@ Get fiscal device status, supported tax rates, and device capabilities.
 
 **Headers:**
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ```
 
 **Response:**
@@ -150,7 +150,7 @@ Authenticate with security element PIN code.
 
 **Headers:**
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 Content-Type: text/plain
 ```
 
@@ -185,7 +185,7 @@ Process fiscal invoice and generate fiscal receipt.
 
 **Headers:**
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 Content-Type: application/json
 ```
 
@@ -306,7 +306,7 @@ Search processed invoices by various criteria.
 
 **Headers:**
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 Content-Type: application/json
 ```
 
@@ -362,7 +362,7 @@ Get detailed information about a specific invoice.
 
 **Headers:**
 ```http
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ```
 
 **Example:**
@@ -534,7 +534,7 @@ taxCategory = TaxCategory(name="Bez PDV", ...)
 Modify constants in `main.py` for different test scenarios:
 
 ```python
-API_KEY = "0123456789abcdef0123456789abcdef"  # API authentication
+API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # API authentication
 PIN = "0A10015"                                  # Security PIN
 GSC_CODE = "9999"                            # Device status (9999=ready)
 BUSINESS_NAME = "Your Company Name"          # Company information
@@ -557,7 +557,7 @@ Configure different device states by changing `GSC_CODE`:
 #### Process Normal Invoice
 ```bash
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{
   "invoiceRequest": {
@@ -579,7 +579,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 #### Process Refund
 ```bash
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{
   "invoiceRequest": {
@@ -603,7 +603,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 #### Copy Receipt
 ```bash
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{
   "invoiceRequest": {
@@ -630,7 +630,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 import requests
 
 class OFSMockupClient:
-    def __init__(self, base_url="http://localhost:8200", api_key="0123456789abcdef0123456789abcdef"):
+    def __init__(self, base_url="http://localhost:8200", api_key="api_key_0123456789abcdef0123456789abcdef"):
         self.base_url = base_url
         self.headers = {
             "Authorization": f"Bearer {api_key}",

@@ -39,7 +39,7 @@
 ## Key Business Logic
 
 ### Authentication System
-- **API Key**: `0123456789abcdef0123456789abcdef` (hardcoded for testing)
+- **API Key**: `api_key_0123456789abcdef0123456789abcdef` (hardcoded for testing)
 - **PIN**: `0A10015` (for security element simulation)
 - **Bearer Token**: Required for all endpoints except root
 
@@ -128,7 +128,7 @@ journal = "=========== FISKALNI RAČUN ===========\n" + detailed_content
 
 ### Configurable Constants
 ```python
-API_KEY = "0123456789abcdef0123456789abcdef"  # Authentication
+API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # Authentication
 PIN = "0A10015"                              # Security PIN
 GSC_CODE = "9999"                            # Device status (9999=OK, 1300=no security, 1500=PIN needed)
 BUSINESS_NAME = "Sigma-com doo Zenica"       # Company info
@@ -208,7 +208,7 @@ ofs-mockup-srv
 ### Testing Invoice Processing
 ```bash
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{...invoice_data...}'
 ```
@@ -216,7 +216,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 ### PIN Authentication Testing
 ```bash
 curl --location 'http://localhost:8200/api/pin' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: text/plain' \
 --data '0A10015'
 ```

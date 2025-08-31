@@ -71,7 +71,7 @@ The server will start at `http://localhost:8200`
 ### Authentication
 All endpoints (except root) require API key authentication:
 ```
-Authorization: Bearer 0123456789abcdef0123456789abcdef
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ```
 
 ### Core Endpoints
@@ -96,7 +96,7 @@ Authorization: Bearer 0123456789abcdef0123456789abcdef
 
 ```bash
 # Assume server at http://localhost:8200 and default API key
-API=0123456789abcdef0123456789abcdef
+API=api_key_0123456789abcdef0123456789abcdef
 
 # 1) Force PIN-required state
 curl -s -X POST \
@@ -148,7 +148,7 @@ Quick script: `bash scripts/demo_flows.sh all` (or `pin` / `invoice`).
 
 ```bash
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{
     "invoiceRequest": {
@@ -174,7 +174,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 
 ```bash
 curl --location 'http://localhost:8200/api/pin' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: text/plain' \
 --data '0A10015'
 ```
@@ -183,7 +183,7 @@ curl --location 'http://localhost:8200/api/pin' \
 
 ```bash
 curl --location 'http://localhost:8200/api/invoices/search' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{
     "fromDate": "2024-03-01",
@@ -269,7 +269,7 @@ See `doc/SEQUENCES.md` for Mermaid diagrams of PIN unlock, 3-strike lockout, and
 
 ```bash
 # Assume server at http://localhost:8200 and default API key
-API=0123456789abcdef0123456789abcdef
+API=api_key_0123456789abcdef0123456789abcdef
 
 # 1) Create a new invoice
 curl -s -X POST \

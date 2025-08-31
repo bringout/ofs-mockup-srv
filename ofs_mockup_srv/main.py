@@ -10,7 +10,7 @@ from enum import Enum
 
 import argparse
 
-API_KEY = "0123456789abcdef0123456789abcdef"
+API_KEY = "api_key_0123456789abcdef0123456789abcdef"
 SEND_CIRILICA = True
 CIRILICA_E = "Е"
 CIRILICA_K = "К"
@@ -88,7 +88,7 @@ def check_api_key(req: Request):
 
 # dostupan
 #curl --location 'http://127.0.0.1:3566/api/attention' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef'
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef'
 
 @app.get("/api/attention")
 async def get_attention(req: Request):
@@ -100,7 +100,7 @@ async def get_attention(req: Request):
 
 # settings get
 # curl --location 'http://127.0.0.1:3566/api/settings' \
-# --header 'Authorization: Bearer 0123456789abcdef0123456789abcdef'
+# --header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef'
 
 #{
 #  "allowedPaymentTypes": [
@@ -245,7 +245,7 @@ async def get_attention(req: Request):
 #}
 
 #curl --location 'http://127.0.0.1:3566/api/invoices' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 #--header 'RequestId: 12345' \
 #--header 'Content-Type: application/json' \
 #--data '{
@@ -276,7 +276,7 @@ async def get_attention(req: Request):
 
 # curl post settings
 #curl --location 'http://127.0.0.1:3566/api/settings' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 #--header 'Content-Type: application/json' \
 #--data '{
 #    "authorizeLocalClients": false,
@@ -307,7 +307,7 @@ async def get_attention(req: Request):
 
 
 #curl --location 'http://127.0.0.1:3566/api/pin' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 #--header 'Content-Type: text/plain' \ <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ne JSON
 #--data '0A10015'
 
@@ -391,7 +391,7 @@ class Status(BaseModel):
 
 # 
 #curl --location 'http://127.0.0.1:3566/api/status' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef'
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef'
 
 #Ovaj poziv vraća status sistema za fiskalizaciju (LPFR ili VPFR u zavisnosti od podešavanja). 
 # Glavna polja u odgovoru od interesa za integraciju sa ESIR-om su:
@@ -691,7 +691,7 @@ async def invoice(req: Request, invoice_data: InvoiceData):
  
 
 #curl --location 'http://127.0.0.1:3566/api/invoices/search' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 #--header 'Content-Type: application/json' \
 #--data '{
 #    "fromDate": "2024-03-01",
@@ -767,7 +767,7 @@ RX4F7Y5L-RX4F7Y5L-145,Advance,Refund,2024-03-12T07:55:07.582+01:00,500.0000
 # kopija računa
 
 #curl --location 'http://127.0.0.1:3566/api/invoices' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 #--header 'RequestId: 12345' \
 #--header 'Content-Type: application/json' \
 #--data '{
@@ -825,7 +825,7 @@ async def get_invoice(invoiceNumber: str, imageFormat: str | None = None, includ
     print("PARAMS:  imageFormat:", imageFormat, " includeHeaderAndFooter:", includeHeaderAndFooter, " receiptLayout:", receiptLayout)
 
     #curl --location 'http://127.0.0.1:3566/api/invoices/RX4F7Y5L-RX4F7Y5L-138?receiptLayout=Slip&imageFormat=Png&includeHeaderAndFooter=true' \
-    #--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef'
+    #--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef'
     lPDV17 = True if invoiceNumber[0:1] != "0" else False
 
     if invoiceNumber.strip() == "ERROR":
@@ -958,7 +958,7 @@ if __name__ == "__main__":
 #može postojati potreba i da se načini plaćanja promene u odnosu na originalni račun.
 
 #curl --location 'http://127.0.0.1:3566/api/invoices' \
-#--header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+#--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 #--header 'RequestId: 12345' \
 #--header 'X-Teron-SerialNumber: 123456789ABCDEF' \
 #--header 'Content-Type: application/json' \

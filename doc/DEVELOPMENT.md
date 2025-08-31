@@ -112,7 +112,7 @@ The OFS Mockup Server follows a single-file architecture for simplicity:
 
 ```python
 # Configuration constants
-API_KEY = "0123456789abcdef0123456789abcdef"
+API_KEY = "api_key_0123456789abcdef0123456789abcdef"
 PIN = "0A10015"
 GSC_CODE = "9999"  # Device status simulation
 BUSINESS_NAME = "Sigma-com doo Zenica"
@@ -204,7 +204,7 @@ Create test scripts for different scenarios:
 # test_refund.sh
 
 curl --location 'http://localhost:8200/api/invoices' \
---header 'Authorization: Bearer 0123456789abcdef0123456789abcdef' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: application/json' \
 --data '{
   "invoiceRequest": {
@@ -247,7 +247,7 @@ def test_root_endpoint():
 def test_attention_endpoint():
     response = client.get(
         "/api/attention",
-        headers={"Authorization": "Bearer 0123456789abcdef0123456789abcdef"}
+        headers={"Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef"}
     )
     assert response.status_code == 200
     assert response.json() == True
@@ -283,7 +283,7 @@ def test_invoice_processing():
     response = client.post(
         "/api/invoices",
         json=invoice_data,
-        headers={"Authorization": "Bearer 0123456789abcdef0123456789abcdef"}
+        headers={"Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef"}
     )
     
     assert response.status_code == 200
@@ -297,7 +297,7 @@ def test_pin_authentication():
         "/api/pin",
         content="0A10015",
         headers={
-            "Authorization": "Bearer 0123456789abcdef0123456789abcdef",
+            "Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef",
             "Content-Type": "text/plain"
         }
     )
@@ -310,7 +310,7 @@ def test_invalid_pin():
         "/api/pin",
         content="wrong",
         headers={
-            "Authorization": "Bearer 0123456789abcdef0123456789abcdef",
+            "Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef",
             "Content-Type": "text/plain"
         }
     )
@@ -522,7 +522,7 @@ async def test_concurrent_requests(num_requests=100):
                         }]
                     }
                 },
-                headers={"Authorization": "Bearer 0123456789abcdef0123456789abcdef"}
+                headers={"Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef"}
             )
             tasks.append(task)
         
