@@ -2,7 +2,7 @@
 
 Below workflows illustrate the new HTTP status-based service availability system and PIN handling in the mock server. Diagrams use Mermaid syntax; render in a compatible viewer or GitHub.
 
-## Service Availability Check Flow
+## Service Availability Check Flow, system available
 ```mermaid
 sequenceDiagram
     autonumber
@@ -16,6 +16,29 @@ sequenceDiagram
     Note over C: Service is available
 ```
 
+## Service Availability Check, system request PIN
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server (FastAPI)
+    participant ST as State (app.state)
+
+
+    C->>S: GET /api/attention (Bearer)
+    S-->>C: 404 Not Found
+    Note over C: Service unavailable - PIN required
+
+    C->>S: POST /api/pin (text/plain: "4321")
+    S->>ST: PIN correct → current_api_attention = 200
+    S->>ST: pin_fail_count = 0
+    S-->>C: 200 "0100"
+
+    C->>S: GET /api/attention (Bearer)
+    S-->>C: 200 OK (no body)
+    Note over C: Service is now available
+```
+
 ## Service Lock/Unlock Flow
 ```mermaid
 sequenceDiagram
@@ -24,9 +47,8 @@ sequenceDiagram
     participant S as Server (FastAPI)
     participant ST as State (app.state)
 
-    C->>S: GET/POST /mock/lock (Bearer API_KEY)
+    C->>S: GET/POST /mock/lock (no auth required)
     S->>ST: current_api_attention = 404
-    S->>ST: gsc = 1500 (for other functionality)
     S-->>C: 200 {"current_api_attention": 404}
 
     C->>S: GET /api/attention (Bearer)
@@ -34,9 +56,8 @@ sequenceDiagram
     S-->>C: 404 Not Found
     Note over C: Service is unavailable
 
-    C->>S: GET/POST /mock/unlock (Bearer API_KEY)
+    C->>S: GET/POST /mock/unlock (no auth required)
     S->>ST: current_api_attention = 200
-    S->>ST: gsc = 9999
     S-->>C: 200 {"current_api_attention": 200}
 
     C->>S: GET /api/attention (Bearer)
@@ -53,7 +74,7 @@ sequenceDiagram
     participant S as Server (FastAPI)
     participant ST as State (app.state)
 
-    C->>S: GET/POST /mock/lock (Bearer API_KEY)
+    C->>S: GET/POST /mock/lock (no auth required)
     S->>ST: current_api_attention = 404
     S-->>C: 200 {"current_api_attention": 404}
 
@@ -63,7 +84,7 @@ sequenceDiagram
 
     C->>S: POST /api/pin (text/plain: "4321")
     S->>ST: PIN correct → current_api_attention = 200
-    S->>ST: gsc = 9999, pin_fail_count = 0
+    S->>ST: pin_fail_count = 0
     S-->>C: 200 "0100"
 
     C->>S: GET /api/attention (Bearer)
@@ -79,7 +100,7 @@ sequenceDiagram
     participant S as Server
     participant ST as State
 
-    C->>S: GET/POST /mock/lock (Bearer)
+    C->>S: GET/POST /mock/lock (no auth required)
     S->>ST: current_api_attention = 404
     S-->>C: 200 {"current_api_attention": 404}
 
@@ -98,7 +119,7 @@ sequenceDiagram
     S-->>C: 200 "2400"
 
     C->>S: POST /api/pin ("2222")
-    S->>ST: pin_fail_count = 3 → gsc = 1300
+    S->>ST: pin_fail_count = 3
     S->>ST: current_api_attention = 404
     S-->>C: 200 "1300"
 
