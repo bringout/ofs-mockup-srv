@@ -49,12 +49,11 @@ Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ```
 
 **Response:**
-```json
-true
-```
+- HTTP 200 OK: Service is available (no response body)
+- HTTP 404 Not Found: Service is not available
 
 **Error Response:**
-- HTTP 401 if API key is invalid
+- HTTP 401 Unauthorized: Invalid API key
 
 ---
 
@@ -156,7 +155,7 @@ Content-Type: text/plain
 
 **Request Body:**
 ```
-0A10015
+4321
 ```
 
 **Success Response:**
@@ -489,7 +488,7 @@ Use invoice number `"ERROR"` to trigger error response:
 |-------|-------------|----------|
 | Invalid API key | Authorization header missing or incorrect | Use correct Bearer token |
 | Copy without reference | Copy/Refund missing reference document | Provide referentDocumentNumber and referentDocumentDT |
-| Invalid PIN | Wrong PIN format or value | Use 4-digit PIN (default: 0A10015) |
+| Invalid PIN | Wrong PIN format or value | Use 4-digit PIN (default: 4321) |
 
 ## Tax System
 
@@ -535,7 +534,7 @@ Modify constants in `main.py` for different test scenarios:
 
 ```python
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # API authentication
-PIN = "0A10015"                                  # Security PIN
+PIN = "4321"                                  # Security PIN
 GSC_CODE = "9999"                            # Device status (9999=ready)
 BUSINESS_NAME = "Your Company Name"          # Company information
 BUSINESS_ADDRESS = "Your Address"

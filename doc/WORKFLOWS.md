@@ -6,15 +6,16 @@ Follow this workflow when integrating with the OFS Mockup Server:
 
 ### 1. Check Service Availability
 
-Verify that ESIR and PFR are available by calling `/api/attention`. If the response is negative, display an appropriate message to the user and retry after a few seconds. Continue checking without limitation until ESIR becomes available.
+Verify that ESIR and PFR are available by calling `/api/attention`. If the HTTP response is 404, display an appropriate message to the user and retry after a few seconds. Continue checking without limitation until ESIR becomes available (HTTP 200).
 
 ```bash
 while true; do
   # Check if service responds
-  response=$(curl -s -H "Authorization: Bearer api_key_0123456789abcdef0123456789abcdef" \
+  status_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    -H "Authorization: Bearer api_key_0123456789abcdef0123456789abcdef" \
     http://localhost:8200/api/attention)
-  if [ "$response" = "9999" ]; then
-    break  # Service is ready
+  if [ "$status_code" = "200" ]; then
+    break  # Service is available
   fi
   sleep 2  # Wait before retry
 done
@@ -93,7 +94,7 @@ POST /api/pin
 Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 Content-Type: text/plain
 
-0A10015
+4321
 ```
 
 #### Response Codes

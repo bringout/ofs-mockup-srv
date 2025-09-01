@@ -26,6 +26,11 @@ curl --location "$BASE_URL/api/attention" \
 --header "Authorization: Bearer $API_KEY"
 ```
 
+**Response:** HTTP status code indicates service availability:
+- `200 OK` - Service is available (no response body)
+- `404 Not Found` - Service is not available
+- `401 Unauthorized` - Invalid API key
+
 ### Device Status
 
 ```bash
@@ -41,7 +46,7 @@ curl --location "$BASE_URL/api/status" \
 curl --location "$BASE_URL/api/pin" \
 --header "Authorization: Bearer $API_KEY" \
 --header "Content-Type: text/plain" \
---data "0A10015"
+--data "4321"
 ```
 
 ## Invoice Operations
@@ -216,15 +221,40 @@ curl --location "$BASE_URL/api/settings" \
 
 ## Mock Device Control (Testing)
 
-### Force Device Lock
+### Set Service Unavailable
 
-Force the device into PIN-required state:
+Set the service to unavailable state (404 response from /api/attention):
 
 ```bash
 curl --location "$BASE_URL/mock/lock" \
 --header "Authorization: Bearer $API_KEY" \
 --header "Content-Type: application/json" \
 --data '{}'
+```
+
+**Response:**
+```json
+{
+  "current_api_attention": 404
+}
+```
+
+### Set Service Available
+
+Set the service to available state (200 response from /api/attention):
+
+```bash
+curl --location "$BASE_URL/mock/unlock" \
+--header "Authorization: Bearer $API_KEY" \
+--header "Content-Type: application/json" \
+--data '{}'
+```
+
+**Response:**
+```json
+{
+  "current_api_attention": 200
+}
 ```
 
 ## Complex Example Scenarios

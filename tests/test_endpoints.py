@@ -20,8 +20,8 @@ def test_attention_requires_valid_api_key():
     with TestClient(app) as client:
         r_ok = client.get("/api/attention", headers=auth_headers())
         r_bad = client.get("/api/attention", headers=auth_headers("bad-token"))
-    # default GSC is 9999
-    assert r_ok.status_code == 200 and r_ok.json() == "9999"
+    # default current_api_attention is 200 (service available)
+    assert r_ok.status_code == 200
     assert r_bad.status_code == 401
 
 
@@ -127,11 +127,11 @@ def test_pin_cycle_via_mock_lock_and_attention():
     with TestClient(app) as client:
         # Force PIN-required state
         lock = client.post("/mock/lock", headers=auth_headers())
-        assert lock.status_code == 200 and lock.json()["gsc"] == "1500"
+        assert lock.status_code == 200 and lock.json()["current_api_attention"] == 404
 
-        # 1) attention should signal PIN required
+        # 1) attention should signal service unavailable
         att = client.get("/api/attention", headers=auth_headers())
-        assert att.status_code == 200 and att.json() == "1500"
+        assert att.status_code == 404
 
         # 2) client asks for PIN entry UI (implicit)
         # 3) user submits PIN
@@ -143,16 +143,16 @@ def test_pin_cycle_via_mock_lock_and_attention():
         assert pin_res.status_code == 200 and pin_res.text == "0100"
 
         # 4) after success
-        # 5) attention shows normal (no PIN required)
+        # 5) attention shows service available
         att2 = client.get("/api/attention", headers=auth_headers())
-        assert att2.status_code == 200 and att2.json() == "9999"
+        assert att2.status_code == 200
 
 
 def test_wrong_pin_does_not_unlock():
     with TestClient(app) as client:
         # Lock to require PIN
         lock = client.post("/mock/lock", headers=auth_headers())
-        assert lock.status_code == 200 and lock.json()["gsc"] == "1500"
+        assert lock.status_code == 200 and lock.json()["current_api_attention"] == 404
 
         # Send wrong (but 4-digit) PIN
         r_wrong = client.post(
@@ -162,9 +162,9 @@ def test_wrong_pin_does_not_unlock():
         )
         assert r_wrong.status_code == 200 and r_wrong.text == "2400"
 
-        # Attention remains in PIN-required state
+        # Attention remains unavailable
         att = client.get("/api/attention", headers=auth_headers())
-        assert att.status_code == 200 and att.json() == "1500"
+        assert att.status_code == 404
 
         # Cleanup: enter correct PIN to restore normal state for other tests
         r_ok = client.post(
@@ -179,7 +179,7 @@ def test_wrong_password_4_times_lock():
     with TestClient(app) as client:
         # Ensure we start from a PIN-required state
         lock = client.post("/mock/lock", headers=auth_headers())
-        assert lock.status_code == 200 and lock.json()["gsc"] == "1500"
+        assert lock.status_code == 200 and lock.json()["current_api_attention"] == 404
 
         # 1st wrong pin
         r1 = client.post(
@@ -188,7 +188,7 @@ def test_wrong_password_4_times_lock():
             content="0000",
         )
         assert r1.status_code == 200 and r1.text == "2400"
-        assert client.get("/api/attention", headers=auth_headers()).json() == "1500"
+        assert client.get("/api/attention", headers=auth_headers()).status_code == 404
 
         # 2nd wrong pin
         r2 = client.post(
@@ -197,7 +197,7 @@ def test_wrong_password_4_times_lock():
             content="1111",
         )
         assert r2.status_code == 200 and r2.text == "2400"
-        assert client.get("/api/attention", headers=auth_headers()).json() == "1500"
+        assert client.get("/api/attention", headers=auth_headers()).status_code == 404
 
         # 3rd wrong pin -> lock to 1300
         r3 = client.post(
@@ -206,7 +206,7 @@ def test_wrong_password_4_times_lock():
             content="2222",
         )
         assert r3.status_code == 200 and r3.text == "1300"
-        assert client.get("/api/attention", headers=auth_headers()).json() == "1300"
+        assert client.get("/api/attention", headers=auth_headers()).status_code == 404
 
         # 4th attempt should still report error and not accept PIN
         r4 = client.post(
@@ -215,4 +215,4 @@ def test_wrong_password_4_times_lock():
             content="3333",
         )
         assert r4.status_code == 200 and r4.text == "1300"
-        assert client.get("/api/attention", headers=auth_headers()).json() == "1300"
+        assert client.get("/api/attention", headers=auth_headers()).status_code == 404

@@ -113,7 +113,7 @@ The OFS Mockup Server follows a single-file architecture for simplicity:
 ```python
 # Configuration constants
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"
-PIN = "0A10015"
+PIN = "4321"
 GSC_CODE = "9999"  # Device status simulation
 BUSINESS_NAME = "Sigma-com doo Zenica"
 SEND_CIRILICA = True  # Multi-language support
@@ -295,7 +295,7 @@ def test_invoice_processing():
 def test_pin_authentication():
     response = client.post(
         "/api/pin",
-        content="0A10015",
+        content="4321",
         headers={
             "Authorization": "Bearer api_key_0123456789abcdef0123456789abcdef",
             "Content-Type": "text/plain"

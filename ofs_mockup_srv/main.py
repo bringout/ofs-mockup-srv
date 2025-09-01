@@ -15,7 +15,7 @@ SEND_CIRILICA = True
 CIRILICA_E = "Е"
 CIRILICA_K = "К"
 
-PIN = "0A10015"
+PIN = "4321"
 
 # Default device General Status Code (GSC) value for startup
 DEFAULT_GSC = "9999"
@@ -29,6 +29,7 @@ app = FastAPI()
 
 app.state.gsc = DEFAULT_GSC
 app.state.pin_fail_count = 0
+app.state.current_api_attention = 200  # Default: service available when GSC=9999
 
 
 
@@ -52,11 +53,14 @@ def check_api_key(req: Request):
 
 @app.get("/api/attention")
 async def get_attention(req: Request):
-    # Return current GSC to indicate whether attention is normal or PIN is required
-    if check_api_key(req):
-        return app.state.gsc
+    # Return HTTP status based on current_api_attention state
+    if not check_api_key(req):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    if app.state.current_api_attention == 200:
+        return  # HTTP 200 with no body
     else:
-        return None
+        raise HTTPException(status_code=404, detail="Service not available")
 
 
 
@@ -75,16 +79,18 @@ async def post_pin(req: Request):
        return "1300"
    body = (await req.body()).decode('utf-8')
    response = "2400"
-   if len(body) < 4:
+   if len(body) != 4:
        response = "2800"
    elif body == PIN:
        response = "0100"
        # Successful PIN entry unlocks device state and resets counter
        app.state.gsc = "9999"
        app.state.pin_fail_count = 0
+       app.state.current_api_attention = 200  # Set service as available
    else:
        # Wrong 4-digit PIN attempt
        app.state.pin_fail_count = int(app.state.pin_fail_count) + 1
+       app.state.current_api_attention = 404  # Set service as unavailable on PIN failure
        if app.state.pin_fail_count >= 3:
            app.state.gsc = "1300"
            response = "1300"
@@ -212,14 +218,26 @@ async def get_status(req: Request):
     
 @app.post("/mock/lock")
 async def mock_lock(req: Request):
-    """Force device state into PIN-required mode (GSC=1500).
-    Requires a valid API key. Returns the new GSC value.
+    """Set service to unavailable state (current_api_attention=404).
+    Requires a valid API key.
     """
     if not check_api_key(req):
         return False
-    app.state.gsc = "1500"
+    app.state.current_api_attention = 404
+    app.state.gsc = "1500"  # Keep GSC for other functionality
     app.state.pin_fail_count = 0
-    return {"gsc": app.state.gsc}
+    return {"current_api_attention": app.state.current_api_attention}
+
+@app.post("/mock/unlock")
+async def mock_unlock(req: Request):
+    """Set service to available state (current_api_attention=200).
+    Requires a valid API key.
+    """
+    if not check_api_key(req):
+        return False
+    app.state.current_api_attention = 200
+    app.state.gsc = "9999"  # Keep GSC for other functionality
+    return {"current_api_attention": app.state.current_api_attention}
 
 class PaymentLine(BaseModel):
     amount: float
@@ -570,6 +588,8 @@ def main():
 
     # Initialize app state from CLI args
     app.state.gsc = str(args.gsc)
+    # Set initial attention status - 200 if ready (GSC=9999), 404 otherwise
+    app.state.current_api_attention = 200 if str(args.gsc) == "9999" else 404
 
     uvicorn.run(
         "ofs_mockup_srv.main:app",

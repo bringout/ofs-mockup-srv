@@ -40,12 +40,19 @@
 
 ### Authentication System
 - **API Key**: `api_key_0123456789abcdef0123456789abcdef` (hardcoded for testing)
-- **PIN**: `0A10015` (for security element simulation)
+- **PIN**: `4321` (for security element simulation)
 - **Bearer Token**: Required for all endpoints except root
+
+### Service Availability System
+- **Attention Endpoint**: `/api/attention` returns HTTP 200 (available) or 404 (unavailable)
+- **Default State**: 200 (available) when server starts with GSC=9999
+- **PIN Integration**: Successful PIN entry sets status to 200, failures set to 404
+- **Mock Control**: `/mock/lock` sets to 404, `/mock/unlock` sets to 200
 
 ### Fiscal Device Simulation
 
 #### Device Status Simulation
+- **Attention System**: HTTP status-based service availability (200=available, 404=unavailable)
 - **GSC Codes**: Configurable status codes (9999=ready, 1300=no security element, 1500=PIN required)
 - **Tax Rates**: Configurable VAT rates for different categories
 - **Device Info**: Serial numbers, software versions, supported languages
@@ -98,12 +105,14 @@
 
 ### Core Endpoints
 - `GET /` - Health check (no auth required)
-- `GET /api/attention` - Service availability check
+- `GET /api/attention` - Service availability check (returns HTTP 200 if available, 404 if unavailable)
 - `GET /api/status` - Device status, tax rates, and capabilities
 - `POST /api/pin` - PIN authentication (text/plain content-type)
 - `POST /api/invoices` - Process fiscal invoices
 - `POST /api/invoices/search` - Search processed invoices
 - `GET /api/invoices/{invoiceNumber}` - Get specific invoice details
+- `POST /mock/lock` - Set service to unavailable state (current_api_attention=404)
+- `POST /mock/unlock` - Set service to available state (current_api_attention=200)
 
 ### Authentication Pattern
 ```python
@@ -129,7 +138,7 @@ journal = "=========== FISKALNI RAČUN ===========\n" + detailed_content
 ### Configurable Constants
 ```python
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # Authentication
-PIN = "0A10015"                              # Security PIN
+PIN = "4321"                              # Security PIN
 GSC_CODE = "9999"                            # Device status (9999=OK, 1300=no security, 1500=PIN needed)
 BUSINESS_NAME = "Sigma-com doo Zenica"       # Company info
 BUSINESS_ADDRESS = "Ulica 7. Muslimanske brigade 77"
@@ -218,7 +227,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 curl --location 'http://localhost:8200/api/pin' \
 --header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: text/plain' \
---data '0A10015'
+--data '4321'
 ```
 
 ### Custom Configuration
@@ -229,3 +238,6 @@ Modify constants in `main.py` to customize:
 - Language preferences
 - Error scenarios
 - all scripts go to scripts/
+
+## Instructions
+- `update` and `push`  for this project use `git` commit/push
