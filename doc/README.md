@@ -31,19 +31,52 @@ This directory contains comprehensive documentation for the OFS Mockup Server pr
 - Debugging and troubleshooting guidance
 - Deployment options and contributing guidelines
 
+### 📋 [DATA_TYPES.md](DATA_TYPES.md)
+**Data Types and Field Definitions**
+- Supported data types for API fields
+- Transaction and invoice type enumerations
+- Payment method specifications
+- Item structure and tax label definitions
+- Field validation requirements and examples
+
+### 🔄 [WORKFLOWS.md](WORKFLOWS.md)
+**API Workflows and Integration Patterns**
+- Standard integration workflow steps
+- Security element and PIN authentication processes
+- Error handling and recovery patterns
+- LPFR/VPFR specific workflows
+- Best practices for fiscal integration
+
+### 💡 [EXAMPLES.md](EXAMPLES.md)
+**Practical API Usage Examples**
+- Complete curl command examples for all endpoints
+- Complex transaction scenarios with multiple payments
+- Invoice search and retrieval examples
+- Integration test scripts and patterns
+- Mock device control for testing
+
+### 📺 [SEQUENCES.md](SEQUENCES.md)
+**Sequence Diagrams**
+- Detailed process flow visualizations
+- Invoice processing workflows
+- Authentication and security flows
+- Error handling scenarios
+
 ## Quick Start Guide
 
 ### For Developers
 1. Read [DEVELOPMENT.md](DEVELOPMENT.md) for setup instructions
-2. Review [API.md](API.md) for endpoint specifications
-3. Check [ARCHITECTURE.md](ARCHITECTURE.md) for design decisions
-4. Use the helper scripts in `../scripts/` for testing
+2. Review [DATA_TYPES.md](DATA_TYPES.md) for field specifications
+3. Check [API.md](API.md) for endpoint documentation
+4. Study [WORKFLOWS.md](WORKFLOWS.md) for integration patterns
+5. Use [EXAMPLES.md](EXAMPLES.md) for practical usage examples
 
 ### For Integration Testing
-1. Start with [API.md](API.md) for endpoint documentation
-2. Review [ARCHITECTURE.md](ARCHITECTURE.md) for data flow understanding
-3. Use [DEVELOPMENT.md](DEVELOPMENT.md) for deployment options
-4. Customize configuration constants for test scenarios
+1. Start with [WORKFLOWS.md](WORKFLOWS.md) for integration workflows
+2. Use [EXAMPLES.md](EXAMPLES.md) for curl command examples
+3. Review [DATA_TYPES.md](DATA_TYPES.md) for request/response formats
+4. Check [API.md](API.md) for detailed endpoint specifications
+5. Customize configuration constants for test scenarios
 
 ### For System Administrators
 1. Begin with [DEVELOPMENT.md](DEVELOPMENT.md) for deployment options
