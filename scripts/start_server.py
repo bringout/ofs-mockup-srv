@@ -6,6 +6,7 @@ Simple startup script for the OFS Mockup Server with configurable parameters.
 """
 
 import argparse
+import os
 import socket
 import subprocess
 import sys
@@ -67,9 +68,12 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python start_server.py                    # Start with defaults (port 8200, available)
+  python start_server.py                    # Start with defaults (port 8200, unavailable, PIN 4321)
   python start_server.py --port 3566       # Start on port 3566
-  python start_server.py --unavailable     # Start with service unavailable
+  python start_server.py --available       # Start with service available
+  python start_server.py --pin 1234        # Set custom PIN
+  python start_server.py --debug           # Start with debug logging enabled
+  python start_server.py --debug --available --pin 0000  # Debug + available + custom PIN
         """
     )
     
@@ -81,9 +85,9 @@ Examples:
     )
     
     parser.add_argument(
-        "--unavailable",
+        "--available",
         action="store_true",
-        help="Start with service unavailable (default: available)"
+        help="Start with service available (default: unavailable)"
     )
     
     parser.add_argument(
@@ -97,6 +101,18 @@ Examples:
         action="store_true",
         help="Disable auto-reload in development mode"
     )
+    
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug mode with request/response logging"
+    )
+    
+    parser.add_argument(
+        "--pin",
+        default="4321",
+        help="Set PIN for device authentication (default: 4321)"
+    )
 
     args = parser.parse_args()
 
@@ -107,17 +123,27 @@ Examples:
             print(f"❌ Cannot start server on port {args.port}")
             sys.exit(1)
     
+    # Set environment variables for the server process
+    os.environ['OFS_MOCKUP_DEBUG'] = 'true' if args.debug else 'false'
+    os.environ['OFS_MOCKUP_PIN'] = args.pin
+    os.environ['OFS_MOCKUP_AVAILABLE'] = 'true' if args.available else 'false'
+    
     # Initialize app state from CLI args
     app.state.pin_fail_count = 0
-    app.state.current_api_attention = 404 if args.unavailable else 200
+    app.state.current_api_attention = 200 if args.available else 404
+    app.state.debug_enabled = args.debug
+    app.state.pin = args.pin
 
-    print(f"🚀 Starting OFS Mockup Server...")
-    print(f"   Host: {args.host}")
-    print(f"   Port: {args.port}")
-    print(f"   Status: {'Unavailable' if args.unavailable else 'Available'}")
-    print(f"   URL: http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}")
-    print(f"   Service: {'404 on /api/attention' if args.unavailable else '200 on /api/attention'}")
-    print()
+    print(f"🚀 Starting OFS Mockup Server...", flush=True)
+    print(f"   Host: {args.host}", flush=True)
+    print(f"   Port: {args.port}", flush=True)
+    print(f"   Status: {'Available' if args.available else 'Unavailable'}", flush=True)
+    print(f"   URL: http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}", flush=True)
+    print(f"   Service: {'200 on /api/attention' if args.available else '404 on /api/attention'}", flush=True)
+    if args.debug:
+        print(f"   PIN: {args.pin}", flush=True)
+    print(f"   Debug: {'Enabled - request/response logging' if args.debug else 'Disabled'}", flush=True)
+    print(flush=True)
 
     try:
         uvicorn.run(
@@ -125,7 +151,8 @@ Examples:
             host=args.host,
             port=args.port,
             reload=not args.no_reload,
-            access_log=False,
+            access_log=args.debug,  # Enable access log when debug is on
+            log_level="debug" if args.debug else "info",
             workers=1,
         )
     except KeyboardInterrupt:

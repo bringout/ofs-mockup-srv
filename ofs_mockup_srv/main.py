@@ -2,11 +2,12 @@ import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from typing import List
 import json
 from random import randint
 import datetime
 from enum import Enum
+import time
+import os
 
 import argparse
 
@@ -15,6 +16,7 @@ SEND_CIRILICA = True
 CIRILICA_E = "Е"
 CIRILICA_K = "К"
 
+# Default PIN - can be overridden via app.state.pin
 PIN = "4321"
 
 # Default device availability state
@@ -27,8 +29,43 @@ DISTRICT = "Zenica"
 
 app = FastAPI()
 
+
+# Debug logging helper
+def debug_log_request(request: Request, body: str = ""):
+    if hasattr(app.state, 'debug_enabled') and app.state.debug_enabled:
+        print(f"🔵 Request: {request.method} {request.url.path}", flush=True)
+        if request.query_params:
+            print(f"   Query: {dict(request.query_params)}", flush=True)
+        if request.headers.get("authorization"):
+            auth = request.headers["authorization"]
+            if "Bearer" in auth:
+                token = auth.replace("Bearer ", "")[:20] + "..."
+                print(f"   Auth: Bearer {token}", flush=True)
+        if body:
+            if len(body) > 200:
+                print(f"   Body: {body[:200]}...", flush=True)
+            else:
+                print(f"   Body: {body}", flush=True)
+
+def debug_log_response(status_code: int, response_data=None):
+    if hasattr(app.state, 'debug_enabled') and app.state.debug_enabled:
+        print(f"🟢 Response: {status_code}", flush=True)
+        if response_data is not None:
+            if isinstance(response_data, dict) or isinstance(response_data, list):
+                response_str = json.dumps(response_data, indent=2)
+                if len(response_str) > 200:
+                    print(f"   Data: {response_str[:200]}...", flush=True)
+                else:
+                    print(f"   Data: {response_str}", flush=True)
+            else:
+                print(f"   Data: {response_data}", flush=True)
+        print("", flush=True)
+
+# Initialize from environment variables (set by start_server.py) or defaults
 app.state.pin_fail_count = 0
-app.state.current_api_attention = 200  # Default: service available
+app.state.current_api_attention = 200 if os.getenv('OFS_MOCKUP_AVAILABLE') == 'true' else 404
+app.state.debug_enabled = os.getenv('OFS_MOCKUP_DEBUG') == 'true'
+app.state.pin = os.getenv('OFS_MOCKUP_PIN', PIN)
 
 
 
@@ -52,12 +89,16 @@ def check_api_key(req: Request):
 @app.get("/api/attention")
 async def get_attention(req: Request):
     # Return HTTP status based on current_api_attention state
+    debug_log_request(req)
     if not check_api_key(req):
+        debug_log_response(401, "Unauthorized")
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     if app.state.current_api_attention == 200:
+        debug_log_response(200, "Service available")
         return  # HTTP 200 with no body
     else:
+        debug_log_response(404, "Service not available")
         raise HTTPException(status_code=404, detail="Service not available")
 
 
@@ -70,28 +111,39 @@ async def get_attention(req: Request):
 
 @app.post("/api/pin", response_class=PlainTextResponse)
 async def post_pin(req: Request):
+   body = (await req.body()).decode('utf-8')
+   debug_log_request(req, body)
+   
    if not check_api_key(req):
+       debug_log_response(401, "Unauthorized")
        return False
+   
    # If device is in error state (after 3 PIN failures), only report error
    if app.state.pin_fail_count >= 3:
+       debug_log_response(200, "1300 (device locked)")
        return "1300"
-   body = (await req.body()).decode('utf-8')
+   
    response = "2400"
    if len(body) != 4:
        response = "2800"
-   elif body == PIN:
+       debug_log_response(200, f"{response} (wrong PIN format)")
+   elif body == app.state.pin:
        response = "0100"
        # Successful PIN entry resets counter
        app.state.pin_fail_count = 0
        app.state.current_api_attention = 200  # Set service as available
+       debug_log_response(200, f"{response} (PIN correct, service available)")
    else:
        # Wrong 4-digit PIN attempt
        app.state.pin_fail_count = int(app.state.pin_fail_count) + 1
        app.state.current_api_attention = 404  # Set service as unavailable on PIN failure
        if app.state.pin_fail_count >= 3:
            response = "1300"
+           debug_log_response(200, f"{response} (device locked after 3 failures)")
        else:
            response = "2400"
+           debug_log_response(200, f"{response} (wrong PIN, attempt {app.state.pin_fail_count})")
+   
    return response
 
 
@@ -213,30 +265,39 @@ async def get_status(req: Request):
     return response
     
 @app.api_route("/mock/lock", methods=["GET", "POST"])
-async def mock_lock():
+async def mock_lock(req: Request):
     """Set service to unavailable state (current_api_attention=404).
     No API key required for mock endpoints.
     """
+    debug_log_request(req)
     app.state.current_api_attention = 404
     # No GSC state needed - only current_api_attention matters
     app.state.pin_fail_count = 0
-    return {"current_api_attention": app.state.current_api_attention}
+    response = {"current_api_attention": app.state.current_api_attention}
+    debug_log_response(200, response)
+    return response
 
 @app.api_route("/mock/unlock", methods=["GET", "POST"])
-async def mock_unlock():
+async def mock_unlock(req: Request):
     """Set service to available state (current_api_attention=200).
     No API key required for mock endpoints.
     """
+    debug_log_request(req)
     app.state.current_api_attention = 200
     # No GSC state needed - only current_api_attention matters
-    return {"current_api_attention": app.state.current_api_attention}
+    response = {"current_api_attention": app.state.current_api_attention}
+    debug_log_response(200, response)
+    return response
 
 @app.get("/mock/current_api_attention")
-async def mock_get_current_api_attention():
+async def mock_get_current_api_attention(req: Request):
     """Get the current service availability state.
     No API key required for mock endpoints.
     """
-    return app.state.current_api_attention
+    debug_log_request(req)
+    response = app.state.current_api_attention
+    debug_log_response(200, response)
+    return response
 
 class PaymentLine(BaseModel):
     amount: float
@@ -581,13 +642,14 @@ async def get_invoice(invoiceNumber: str, imageFormat: str | None = None, includ
 def main():
     """Main entry point for the OFS mockup server."""
     parser = argparse.ArgumentParser(description="OFS Mockup Server")
-    parser.add_argument("--available", action="store_true", default=True, help="Start with service available")
-    parser.add_argument("--unavailable", action="store_true", help="Start with service unavailable")
+    parser.add_argument("--available", action="store_true", help="Start with service available (default: unavailable)")
     parser.add_argument("--port", type=int, default=8200, help="Port to bind")
+    parser.add_argument("--pin", default="4321", help="Set PIN for device authentication (default: 4321)")
     args, _ = parser.parse_known_args()
 
     # Initialize app state from CLI args  
-    app.state.current_api_attention = 404 if args.unavailable else 200
+    app.state.current_api_attention = 200 if args.available else 404
+    app.state.pin = args.pin
 
     uvicorn.run(
         "ofs_mockup_srv.main:app",

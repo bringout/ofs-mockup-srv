@@ -11,7 +11,7 @@ sequenceDiagram
     participant ST as State (app.state)
 
     C->>S: GET /api/attention (Bearer API_KEY)
-    Note over S: current_api_attention = 200 (default)
+    Note over S: current_api_attention = 200 (started with --available)
     S-->>C: 200 OK (no body)
     Note over C: Service is available
 ```
