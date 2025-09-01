@@ -13,6 +13,31 @@ sequenceDiagram
     C->>S: GET /api/attention (Bearer API_KEY)
     Note over S: current_api_attention = 200 (started with --available)
     S-->>C: 200 OK (no body)
+## Regular Invoice Processing
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server (FastAPI)
+    participant V as Validator
+    participant B as Business Logic
+    participant R as Response Generator
+
+    C->>S: POST /api/invoices (Bearer API_KEY)
+    Note over C,S: Invoice data with Normal/Sale transaction
+
+    S->>S: check_api_key(req)
+    alt API key valid
+        S->>V: validate InvoiceData
+        V->>V: check invoiceType, transactionType, items, payment
+        
+        alt validation successful
+            V->>B: process Normal sale
+            B->>B: calculate totalValue from items
+            B->>B: validate payment amounts
+            B->>B: process tax calculations (labels E,D,G,A,F)
+            
+
     Note over C: Service is available
 ```
 
@@ -39,58 +64,6 @@ sequenceDiagram
     Note over C: Service is now available
 ```
 
-## Service Lock/Unlock Flow
-```mermaid
-sequenceDiagram
-    autonumber
-    participant C as Client
-    participant S as Server (FastAPI)
-    participant ST as State (app.state)
-
-    C->>S: GET/POST /mock/lock (no auth required)
-    S->>ST: current_api_attention = 404
-    S-->>C: 200 {"current_api_attention": 404}
-
-    C->>S: GET /api/attention (Bearer)
-    Note over S: current_api_attention = 404
-    S-->>C: 404 Not Found
-    Note over C: Service is unavailable
-
-    C->>S: GET/POST /mock/unlock (no auth required)
-    S->>ST: current_api_attention = 200
-    S-->>C: 200 {"current_api_attention": 200}
-
-    C->>S: GET /api/attention (Bearer)
-    Note over S: current_api_attention = 200
-    S-->>C: 200 OK (no body)
-    Note over C: Service is available
-```
-
-## PIN Integration Flow
-```mermaid
-sequenceDiagram
-    autonumber
-    participant C as Client
-    participant S as Server (FastAPI)
-    participant ST as State (app.state)
-
-    C->>S: GET/POST /mock/lock (no auth required)
-    S->>ST: current_api_attention = 404
-    S-->>C: 200 {"current_api_attention": 404}
-
-    C->>S: GET /api/attention (Bearer)
-    S-->>C: 404 Not Found
-    Note over C: Service unavailable - PIN required
-
-    C->>S: POST /api/pin (text/plain: "4321")
-    S->>ST: PIN correct → current_api_attention = 200
-    S->>ST: pin_fail_count = 0
-    S-->>C: 200 "0100"
-
-    C->>S: GET /api/attention (Bearer)
-    S-->>C: 200 OK (no body)
-    Note over C: Service is now available
-```
 
 ## PIN Failure Flow
 ```mermaid
@@ -131,31 +104,6 @@ sequenceDiagram
     S-->>C: 200 "1300" (ignored while in error state)
 ```
 
-## Server Startup Flow
-```mermaid
-sequenceDiagram
-    participant CLI as CLI
-    participant S as Server
-    participant ST as State
-
-    CLI->>S: start with --gsc=9999 (default)
-    S->>ST: gsc = 9999
-    S->>ST: current_api_attention = 200 (available)
-
-    Note over S: Service starts in available state
-
-    participant C as Client
-    C->>S: GET /api/attention
-    S-->>C: 200 OK (no body)
-
-    alt CLI with --gsc=1500
-        CLI->>S: start with --gsc=1500
-        S->>ST: gsc = 1500
-        S->>ST: current_api_attention = 404 (unavailable)
-        C->>S: GET /api/attention
-        S-->>C: 404 Not Found
-    end
-```
 
 ## Regular Invoice Processing
 ```mermaid
