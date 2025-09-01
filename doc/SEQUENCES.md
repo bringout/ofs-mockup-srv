@@ -1,8 +1,8 @@
 # Sequence Diagrams
 
-Below workflows illustrate GSC-driven authentication and PIN handling in the mock server. Diagrams use Mermaid syntax; render in a compatible viewer or GitHub.
+Below workflows illustrate the new HTTP status-based service availability system and PIN handling in the mock server. Diagrams use Mermaid syntax; render in a compatible viewer or GitHub.
 
-## PIN Unlock Flow
+## Service Availability Check Flow
 ```mermaid
 sequenceDiagram
     autonumber
@@ -10,22 +10,68 @@ sequenceDiagram
     participant S as Server (FastAPI)
     participant ST as State (app.state)
 
-    C->>S: POST /mock/lock (Bearer API_KEY)
-    S->>ST: gsc = 1500, pin_fail_count = 0
-    S-->>C: 200 {"gsc":"1500"}
+    C->>S: GET /api/attention (Bearer API_KEY)
+    Note over S: current_api_attention = 200 (default)
+    S-->>C: 200 OK (no body)
+    Note over C: Service is available
+```
+
+## Service Lock/Unlock Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server (FastAPI)
+    participant ST as State (app.state)
+
+    C->>S: GET/POST /mock/lock (Bearer API_KEY)
+    S->>ST: current_api_attention = 404
+    S->>ST: gsc = 1500 (for other functionality)
+    S-->>C: 200 {"current_api_attention": 404}
 
     C->>S: GET /api/attention (Bearer)
-    S-->>C: 200 "1500"
+    Note over S: current_api_attention = 404
+    S-->>C: 404 Not Found
+    Note over C: Service is unavailable
 
-    C->>S: POST /api/pin (text/plain: PIN)
-    S->>ST: if PIN ok → gsc = 9999, pin_fail_count = 0
+    C->>S: GET/POST /mock/unlock (Bearer API_KEY)
+    S->>ST: current_api_attention = 200
+    S->>ST: gsc = 9999
+    S-->>C: 200 {"current_api_attention": 200}
+
+    C->>S: GET /api/attention (Bearer)
+    Note over S: current_api_attention = 200
+    S-->>C: 200 OK (no body)
+    Note over C: Service is available
+```
+
+## PIN Integration Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server (FastAPI)
+    participant ST as State (app.state)
+
+    C->>S: GET/POST /mock/lock (Bearer API_KEY)
+    S->>ST: current_api_attention = 404
+    S-->>C: 200 {"current_api_attention": 404}
+
+    C->>S: GET /api/attention (Bearer)
+    S-->>C: 404 Not Found
+    Note over C: Service unavailable - PIN required
+
+    C->>S: POST /api/pin (text/plain: "4321")
+    S->>ST: PIN correct → current_api_attention = 200
+    S->>ST: gsc = 9999, pin_fail_count = 0
     S-->>C: 200 "0100"
 
     C->>S: GET /api/attention (Bearer)
-    S-->>C: 200 "9999"
+    S-->>C: 200 OK (no body)
+    Note over C: Service is now available
 ```
 
-## Wrong PIN Lockout (3 strikes → 1300)
+## PIN Failure Flow
 ```mermaid
 sequenceDiagram
     autonumber
@@ -33,45 +79,61 @@ sequenceDiagram
     participant S as Server
     participant ST as State
 
-    C->>S: POST /mock/lock (Bearer)
-    S->>ST: gsc = 1500, pin_fail_count = 0
-    S-->>C: 200 {"gsc":"1500"}
+    C->>S: GET/POST /mock/lock (Bearer)
+    S->>ST: current_api_attention = 404
+    S-->>C: 200 {"current_api_attention": 404}
 
     C->>S: POST /api/pin ("0000")
+    S->>ST: PIN wrong → current_api_attention = 404
     S->>ST: pin_fail_count = 1
     S-->>C: 200 "2400"
 
+    C->>S: GET /api/attention
+    S-->>C: 404 Not Found
+    Note over C: Service still unavailable
+
     C->>S: POST /api/pin ("1111")
+    S->>ST: PIN wrong → current_api_attention = 404
     S->>ST: pin_fail_count = 2
     S-->>C: 200 "2400"
 
     C->>S: POST /api/pin ("2222")
-    S->>ST: pin_fail_count = 3
-    S->>ST:  gsc = 1300
+    S->>ST: pin_fail_count = 3 → gsc = 1300
+    S->>ST: current_api_attention = 404
     S-->>C: 200 "1300"
 
     C->>S: GET /api/attention
-    S-->>C: 200 "1300"
+    S-->>C: 404 Not Found
+    Note over C: Service unavailable (locked)
 
     C->>S: POST /api/pin (any)
     S-->>C: 200 "1300" (ignored while in error state)
 ```
 
-## Init Parameter (--gsc)
+## Server Startup Flow
 ```mermaid
 sequenceDiagram
     participant CLI as CLI
     participant S as Server
     participant ST as State
 
-    CLI->>S: start with --gsc=1500
-    S->>ST: gsc = 1500 at startup
+    CLI->>S: start with --gsc=9999 (default)
+    S->>ST: gsc = 9999
+    S->>ST: current_api_attention = 200 (available)
 
-    Note over S: /api/status includes gsc in array [gsc, "0210"]
+    Note over S: Service starts in available state
 
     participant C as Client
     C->>S: GET /api/attention
-    S-->>C: 200 "1500"
+    S-->>C: 200 OK (no body)
+
+    alt CLI with --gsc=1500
+        CLI->>S: start with --gsc=1500
+        S->>ST: gsc = 1500
+        S->>ST: current_api_attention = 404 (unavailable)
+        C->>S: GET /api/attention
+        S-->>C: 404 Not Found
+    end
 ```
 
 ## Regular Invoice Processing
@@ -159,12 +221,24 @@ sequenceDiagram
     end
 ```
 
-```
-Notes
-- GSC codes: 1300 = security error; 1500 = PIN required; 9999 = OK (PIN entered).
-- /api/status mirrors current GSC in `gsc` list along with other status codes.
-- /api/pin accepts `text/plain` only.
-- Invoice processing requires valid Bearer token authentication.
-- Refund transactions must include referentDocumentNumber and referentDocumentDT.
-- Tax calculations based on item labels: E (10%), D (20%), G/K (0%), A (exempt), F (11%).
-```
+## Key Changes from Previous Version
+
+### Service Availability System
+- **New Approach**: HTTP status codes (200/404) instead of GSC text responses
+- **current_api_attention**: New state variable controlling `/api/attention` responses
+- **Default State**: 200 (available) when GSC=9999, 404 otherwise
+
+### API Behavior Changes
+- **`/api/attention`**: Returns HTTP 200 (available) or 404 (unavailable) with no response body
+- **`/mock/lock`**: Sets `current_api_attention=404` and returns `{"current_api_attention": 404}`
+- **`/mock/unlock`**: Sets `current_api_attention=200` and returns `{"current_api_attention": 200}`
+- **`/api/pin`**: Success sets `current_api_attention=200`, failure sets `current_api_attention=404`
+
+### Notes
+- **PIN Format**: 4321 (exactly 4 digits)
+- **GSC Codes**: Still used internally for device status (1300=security error, 1500=PIN required, 9999=OK)
+- **API Status**: `/api/status` still returns GSC in the `gsc` array for device status information
+- **PIN Authentication**: Accepts `text/plain` content-type only
+- **Invoice Processing**: Requires valid Bearer token authentication
+- **Refund Transactions**: Must include referentDocumentNumber and referentDocumentDT
+- **Tax Calculations**: Based on item labels: E (10%), D (20%), G/K (0%), A (exempt), F (11%)

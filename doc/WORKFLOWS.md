@@ -21,13 +21,22 @@ while true; do
 done
 ```
 
-### 2. Security Element Check (LPFR only)
+### 2. Service Availability Check
 
-**Only when using LPFR**: Check if the security element is present by calling `/api/status` and verifying that the GSC field doesn't contain code `1300`. If this code is present, display an appropriate message that the security element is not present and continue checking until code `1300` disappears.
+If `/api/attention` returns HTTP 404, the service is unavailable. This could indicate:
+- Device initialization needed
+- Security element issues
+- PIN entry required
+- System lock state
 
-### 3. PIN Entry Check (LPFR only)
+Use `/api/status` to get detailed device information if needed for diagnostics, but the primary availability check is the HTTP status from `/api/attention`.
 
-**Only when using LPFR**: Check if PIN entry is required by calling `/api/status` and verifying if the GSC field contains code `1500`. If this code is present, display an appropriate screen for PIN entry and send the PIN via `/api/pin` call for verification. After successful PIN entry, you can continue with normal operation.
+### 3. Service Recovery
+
+If service is unavailable (HTTP 404 from `/api/attention`):
+1. **PIN Entry**: Attempt PIN authentication via `/api/pin` (successful PIN entry will make service available)
+2. **Check detailed status** via `/api/status` for diagnostic information if needed
+3. **Mock Control**: Use `/mock/unlock` to force service availability in testing scenarios
 
 ### 4. Process Fiscal Transactions
 
@@ -75,12 +84,13 @@ Before using ESIR in production, review and strengthen security settings via the
 
 ### PIN Entry Requirements
 
-PIN authentication is required when the device General Status Code (GSC) indicates `1500`. The PIN authentication process:
+PIN authentication integrates with the service availability system. The PIN authentication process:
 
-1. **Check Status**: Call `/api/status` and check for GSC code `1500`
-2. **Prompt User**: If `1500` is present, display PIN entry screen
-3. **Submit PIN**: Send PIN via `/api/pin` endpoint
-4. **Handle Response**: Process the response code
+1. **Check Availability**: Call `/api/attention` - if returns 404, service may need PIN
+2. **Prompt User**: Display PIN entry screen if service is unavailable
+3. **Submit PIN**: Send PIN via `/api/pin` endpoint  
+4. **Verify Availability**: Successful PIN entry automatically sets service to available (HTTP 200 from `/api/attention`)
+5. **Check Details**: Use `/api/status` for additional diagnostic information if needed
 
 ### PIN API Details
 
@@ -120,8 +130,9 @@ Content-Type: text/plain
 
 ### Common Error Scenarios
 
-1. **Service Unavailable**: Retry `/api/attention` until service responds
-2. **Security Element Removed**: Monitor for GSC `1300` and prompt user to reinsert
-3. **PIN Lock**: After 3 failed PIN attempts, device requires security element reinsertion
+1. **Service Unavailable**: Retry `/api/attention` until service responds with HTTP 200
+2. **PIN Authentication Required**: If `/api/attention` returns 404, attempt PIN entry via `/api/pin`
+3. **PIN Lock**: After failed PIN attempts, service may remain unavailable until resolved
 4. **Printer Issues**: Use `invoiceResponse` field to retry printing without re-fiscalization
 5. **Network Issues**: Implement retry logic with exponential backoff
+6. **Mock Control**: Use `/mock/unlock` to force service availability during testing

@@ -17,8 +17,8 @@ CIRILICA_K = "К"
 
 PIN = "4321"
 
-# Default device General Status Code (GSC) value for startup
-DEFAULT_GSC = "9999"
+# Default device availability state
+DEFAULT_AVAILABLE = True
 
 BUSINESS_NAME = "Sigma-com doo Zenica"
 BUSINESS_ADDRESS = "Ulica 7. Muslimanske brigade 77"
@@ -27,9 +27,8 @@ DISTRICT = "Zenica"
 
 app = FastAPI()
 
-app.state.gsc = DEFAULT_GSC
 app.state.pin_fail_count = 0
-app.state.current_api_attention = 200  # Default: service available when GSC=9999
+app.state.current_api_attention = 200  # Default: service available
 
 
 
@@ -46,7 +45,6 @@ def check_api_key(req: Request):
         raise HTTPException(
             status_code = status.HTTP_401_UNAUTHORIZED, detail = "Unauthorized API-KEY %s" % (token)
         )
-        return False
 
     return True
 
@@ -74,8 +72,8 @@ async def get_attention(req: Request):
 async def post_pin(req: Request):
    if not check_api_key(req):
        return False
-   # If device is in error state, don't accept PIN, only report error
-   if app.state.gsc == "1300":
+   # If device is in error state (after 3 PIN failures), only report error
+   if app.state.pin_fail_count >= 3:
        return "1300"
    body = (await req.body()).decode('utf-8')
    response = "2400"
@@ -83,8 +81,7 @@ async def post_pin(req: Request):
        response = "2800"
    elif body == PIN:
        response = "0100"
-       # Successful PIN entry unlocks device state and resets counter
-       app.state.gsc = "9999"
+       # Successful PIN entry resets counter
        app.state.pin_fail_count = 0
        app.state.current_api_attention = 200  # Set service as available
    else:
@@ -92,7 +89,6 @@ async def post_pin(req: Request):
        app.state.pin_fail_count = int(app.state.pin_fail_count) + 1
        app.state.current_api_attention = 404  # Set service as unavailable on PIN failure
        if app.state.pin_fail_count >= 3:
-           app.state.gsc = "1300"
            response = "1300"
        else:
            response = "2400"
@@ -119,7 +115,7 @@ class Status(BaseModel):
    allTaxRates:  list[TaxRates] = [] 
    currentTaxRates: list[TaxRates] = []
    deviceSerialNumber: str
-   gsc: list[str] = []
+   gsc: list[str] = []  # Status codes for compatibility
    hardwareVersion: str
    lastInvoiceNumber: str
    make: str 
@@ -193,7 +189,7 @@ async def get_status(req: Request):
         currentTaxRates=currentTaxRates,
         deviceSerialNumber = "01-0001-WPYB002248200772",
         gsc = [
-         app.state.gsc,
+         "9999",  # Always ready for status endpoint
          "0210"
         ],
         hardwareVersion = "1.0",
@@ -216,28 +212,31 @@ async def get_status(req: Request):
 
     return response
     
-@app.post("/mock/lock")
-async def mock_lock(req: Request):
+@app.api_route("/mock/lock", methods=["GET", "POST"])
+async def mock_lock():
     """Set service to unavailable state (current_api_attention=404).
-    Requires a valid API key.
+    No API key required for mock endpoints.
     """
-    if not check_api_key(req):
-        return False
     app.state.current_api_attention = 404
-    app.state.gsc = "1500"  # Keep GSC for other functionality
+    # No GSC state needed - only current_api_attention matters
     app.state.pin_fail_count = 0
     return {"current_api_attention": app.state.current_api_attention}
 
-@app.post("/mock/unlock")
-async def mock_unlock(req: Request):
+@app.api_route("/mock/unlock", methods=["GET", "POST"])
+async def mock_unlock():
     """Set service to available state (current_api_attention=200).
-    Requires a valid API key.
+    No API key required for mock endpoints.
     """
-    if not check_api_key(req):
-        return False
     app.state.current_api_attention = 200
-    app.state.gsc = "9999"  # Keep GSC for other functionality
+    # No GSC state needed - only current_api_attention matters
     return {"current_api_attention": app.state.current_api_attention}
+
+@app.get("/mock/current_api_attention")
+async def mock_get_current_api_attention():
+    """Get the current service availability state.
+    No API key required for mock endpoints.
+    """
+    return app.state.current_api_attention
 
 class PaymentLine(BaseModel):
     amount: float
@@ -582,14 +581,13 @@ async def get_invoice(invoiceNumber: str, imageFormat: str | None = None, includ
 def main():
     """Main entry point for the OFS mockup server."""
     parser = argparse.ArgumentParser(description="OFS Mockup Server")
-    parser.add_argument("--gsc", default=DEFAULT_GSC, help="Initial GSC value (1300|1500|9999)")
+    parser.add_argument("--available", action="store_true", default=True, help="Start with service available")
+    parser.add_argument("--unavailable", action="store_true", help="Start with service unavailable")
     parser.add_argument("--port", type=int, default=8200, help="Port to bind")
     args, _ = parser.parse_known_args()
 
-    # Initialize app state from CLI args
-    app.state.gsc = str(args.gsc)
-    # Set initial attention status - 200 if ready (GSC=9999), 404 otherwise
-    app.state.current_api_attention = 200 if str(args.gsc) == "9999" else 404
+    # Initialize app state from CLI args  
+    app.state.current_api_attention = 404 if args.unavailable else 200
 
     uvicorn.run(
         "ofs_mockup_srv.main:app",

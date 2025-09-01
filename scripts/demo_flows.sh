@@ -18,10 +18,10 @@ hdr_auth=( -H "Authorization: Bearer ${API_KEY}" )
 
 pin_flow() {
   echo "== PIN unlock flow =="
-  echo "Locking (GSC=1500) ..."
+  echo "Locking (service unavailable) ..."
   curl -sS -X POST "${BASE_URL}/mock/lock" "${hdr_auth[@]}" | jq .
 
-  echo "Attention (expect 1500) ..."
+  echo "Attention (expect HTTP 404 - unavailable) ..."
   curl -sS "${BASE_URL}/api/attention" "${hdr_auth[@]}"; echo
 
   echo "Entering correct PIN ..."
@@ -29,10 +29,10 @@ pin_flow() {
     "${hdr_auth[@]}" -H "Content-Type: text/plain" \
     --data "${PIN_VALUE}"; echo
 
-  echo "Attention (expect 9999) ..."
+  echo "Attention (expect HTTP 200 - available) ..."
   curl -sS "${BASE_URL}/api/attention" "${hdr_auth[@]}"; echo
 
-  echo "== Lockout (3 wrong attempts -> 1300) =="
+  echo "== Lockout (3 wrong attempts -> service unavailable) =="
   curl -sS -X POST "${BASE_URL}/mock/lock" "${hdr_auth[@]}" >/dev/null
   for P in 0000 1111 2222; do
     echo "Sending wrong PIN: $P ..."
@@ -40,10 +40,10 @@ pin_flow() {
       "${hdr_auth[@]}" -H "Content-Type: text/plain" \
       --data "$P"; echo
   done
-  echo "Attention (expect 1300) ..."
+  echo "Attention (expect HTTP 404 - locked out) ..."
   curl -sS "${BASE_URL}/api/attention" "${hdr_auth[@]}"; echo
 
-  echo "Attempt correct PIN after lockout (still 1300) ..."
+  echo "Attempt correct PIN after lockout (still locked) ..."
   curl -sS -X POST "${BASE_URL}/api/pin" \
     "${hdr_auth[@]}" -H "Content-Type: text/plain" \
     --data "${PIN_VALUE}"; echo

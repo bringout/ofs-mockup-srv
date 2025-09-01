@@ -1,8 +1,8 @@
 PYTHON ?= python
 PORT ?= 8200
-GSC ?= 9999
+UNAVAILABLE ?= false
 
-.PHONY: install-dev run run-gsc test lint format demo demo-pin demo-invoice
+.PHONY: install-dev run run-available run-unavailable test lint format demo demo-pin demo-invoice
 
 install-dev:
 	$(PYTHON) -m pip install -e .[dev]
@@ -10,8 +10,11 @@ install-dev:
 run:
 	ofs-mockup-srv --port $(PORT)
 
-run-gsc:
-	ofs-mockup-srv --gsc $(GSC) --port $(PORT)
+run-available:
+	ofs-mockup-srv --available --port $(PORT)
+
+run-unavailable:
+	ofs-mockup-srv --unavailable --port $(PORT)
 
 test:
 	pytest -q

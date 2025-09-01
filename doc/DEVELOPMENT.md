@@ -114,7 +114,7 @@ The OFS Mockup Server follows a single-file architecture for simplicity:
 # Configuration constants
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"
 PIN = "4321"
-GSC_CODE = "9999"  # Device status simulation
+current_api_attention = 200  # Service availability (200=available, 404=unavailable)
 BUSINESS_NAME = "Sigma-com doo Zenica"
 SEND_CIRILICA = True  # Multi-language support
 
@@ -174,7 +174,7 @@ Edit constants at the top of `main.py`:
 # Customize for different test scenarios
 BUSINESS_NAME = "Your Test Company"
 BUSINESS_ADDRESS = "Test Address 123" 
-GSC_CODE = "1300"  # Simulate no security element
+current_api_attention = 404  # Simulate service unavailable on startup
 SEND_CIRILICA = False  # Use Latin script
 ```
 
@@ -387,19 +387,19 @@ Create different configuration profiles by modifying constants:
 # Development configuration
 if os.getenv("ENV") == "development":
     API_KEY = "dev_key_123"
-    GSC_CODE = "9999"  # Always ready
+    current_api_attention = 200  # Service always available
     SEND_CIRILICA = False
 
 # Testing configuration  
 elif os.getenv("ENV") == "testing":
     API_KEY = "test_key_456"
-    GSC_CODE = "1300"  # Simulate security issues
+    current_api_attention = 404  # Service starts unavailable for testing
     SEND_CIRILICA = True
 
 # Production-like configuration
 else:
     API_KEY = "prod_key_789"
-    GSC_CODE = "9999"
+    current_api_attention = 200  # Service available
     SEND_CIRILICA = True
 ```
 
@@ -415,19 +415,20 @@ SEND_CIRILICA = True
 SEND_CIRILICA = False
 ```
 
-### Device Status Simulation
+### Service Availability Simulation
 
-Configure different device states for testing:
+Configure different service states for testing:
 
 ```python
-# Device ready
-GSC_CODE = "9999"
+# Service available
+current_api_attention = 200  # /api/attention returns HTTP 200
 
-# Security element missing
-GSC_CODE = "1300" 
+# Service unavailable
+current_api_attention = 404  # /api/attention returns HTTP 404
 
-# PIN required
-GSC_CODE = "1500"
+# Note: Service availability can also be controlled at runtime using:
+# POST /mock/unlock (sets to 200)
+# POST /mock/lock (sets to 404)
 ```
 
 ### Tax Rate Customization

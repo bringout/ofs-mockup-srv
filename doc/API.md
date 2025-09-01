@@ -41,7 +41,7 @@ Simple health check endpoint that doesn't require authentication.
 
 #### GET /api/attention
 
-Check if the fiscal service is available and responsive.
+Check if the fiscal service is available and responsive. This is the primary endpoint for service availability checking.
 
 **Headers:**
 ```http
@@ -54,6 +54,8 @@ Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 
 **Error Response:**
 - HTTP 401 Unauthorized: Invalid API key
+
+**Note:** This endpoint returns HTTP status codes only. For detailed device status information, use `/api/status`.
 
 ---
 
@@ -134,10 +136,14 @@ Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 }
 ```
 
-**GSC Status Codes:**
-- `9999` - Device ready
-- `1300` - Security element not present  
-- `1500` - PIN entry required
+**Status Information:**
+The `gsc` field in the response is maintained for backward compatibility with legacy systems. The primary service availability is determined by HTTP status codes from `/api/attention`:
+- HTTP 200: Service available
+- HTTP 404: Service unavailable
+
+**Legacy GSC Field Values:**
+- `["9999", "0210"]` - Device ready (for compatibility)
+- May contain additional codes for diagnostic purposes
 
 ---
 
@@ -535,19 +541,24 @@ Modify constants in `main.py` for different test scenarios:
 ```python
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # API authentication
 PIN = "4321"                                  # Security PIN
-GSC_CODE = "9999"                            # Device status (9999=ready)
 BUSINESS_NAME = "Your Company Name"          # Company information
 BUSINESS_ADDRESS = "Your Address"
 DISTRICT = "Your District"
 SEND_CIRILICA = True                         # Enable Cyrillic responses
 ```
 
-### Device Status Simulation
+### Service Availability Control
 
-Configure different device states by changing `GSC_CODE`:
-- `"9999"` - Device ready for operation
-- `"1300"` - Security element not present
-- `"1500"` - PIN entry required
+**Service Availability**: The `/api/attention` endpoint returns HTTP 200 (available) or 404 (unavailable) based on `current_api_attention` state, which is controlled by:
+- PIN authentication success/failure
+- Mock control endpoints (`/mock/lock`, `/mock/unlock`)
+- Service initialization state
+
+**HTTP Status Codes:**
+- `200 OK` - Service is available and ready for fiscal operations
+- `404 Not Found` - Service is unavailable (PIN required, security issues, or locked)
+
+**Compatibility Note**: The Status response includes a `gsc` field for backward compatibility with legacy systems, but service availability should be determined using HTTP status codes from `/api/attention`.
 
 ## Integration Examples
 
@@ -622,6 +633,94 @@ curl --location 'http://localhost:8200/api/invoices' \
   }
 }'
 ```
+
+---
+
+## Mock Control Endpoints
+
+These endpoints are used for testing and simulation control.
+
+### Set Service Unavailable
+
+#### GET/POST /mock/lock
+
+Set the service to unavailable state, causing `/api/attention` to return HTTP 404.
+Supports both GET and POST requests.
+
+**Headers:**
+```http
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{}
+```
+
+**Response:**
+```json
+{
+  "current_api_attention": 404
+}
+```
+
+### Set Service Available
+
+#### GET/POST /mock/unlock
+
+Set the service to available state, causing `/api/attention` to return HTTP 200.
+Supports both GET and POST requests.
+
+**Headers:**
+```http
+Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{}
+```
+
+**Response:**
+```json
+{
+  "current_api_attention": 200
+}
+```
+
+### Usage Examples
+
+#### Lock Service (POST)
+```bash
+curl --location 'http://localhost:8200/mock/lock' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
+--header 'Content-Type: application/json' \
+--data '{}'
+```
+
+#### Lock Service (GET)
+```bash
+curl --location 'http://localhost:8200/mock/lock' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef'
+```
+
+#### Unlock Service (POST)
+```bash
+curl --location 'http://localhost:8200/mock/unlock' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
+--header 'Content-Type: application/json' \
+--data '{}'
+```
+
+#### Unlock Service (GET)
+```bash
+curl --location 'http://localhost:8200/mock/unlock' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef'
+```
+
+---
 
 ### Python Integration Example
 

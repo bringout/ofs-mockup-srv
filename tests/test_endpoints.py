@@ -25,11 +25,12 @@ def test_attention_requires_valid_api_key():
     assert r_bad.status_code == 401
 
 
-def test_status_structure_and_gsc_present():
+def test_status_structure_and_compatibility():
     with TestClient(app) as client:
         r = client.get("/api/status", headers=auth_headers())
     assert r.status_code == 200
     data = r.json()
+    # GSC field kept for backward compatibility
     assert "gsc" in data and isinstance(data["gsc"], list) and len(data["gsc"]) >= 1
     assert data["deviceSerialNumber"]
     assert data["protocolVersion"] == "2.0"

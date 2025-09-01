@@ -33,7 +33,7 @@
    - API key authentication
    - Business information (name, address, district)
    - Security PIN for device authentication
-   - GSC status codes for device simulation
+   - Service availability status (current_api_attention)
    - Language and localization settings
 
 ## Key Business Logic
@@ -45,7 +45,7 @@
 
 ### Service Availability System
 - **Attention Endpoint**: `/api/attention` returns HTTP 200 (available) or 404 (unavailable)
-- **Default State**: 200 (available) when server starts with GSC=9999
+- **Default State**: 404 (unavailable) when server starts (or 200 with --available flag)
 - **PIN Integration**: Successful PIN entry sets status to 200, failures set to 404
 - **Mock Control**: `/mock/lock` sets to 404, `/mock/unlock` sets to 200
 
@@ -53,7 +53,7 @@
 
 #### Device Status Simulation
 - **Attention System**: HTTP status-based service availability (200=available, 404=unavailable)
-- **GSC Codes**: Configurable status codes (9999=ready, 1300=no security element, 1500=PIN required)
+- **Service States**: Available (200) or unavailable (404) based on current_api_attention
 - **Tax Rates**: Configurable VAT rates for different categories
 - **Device Info**: Serial numbers, software versions, supported languages
 - **Multi-language**: Bosnia/Serbia (Latin/Cyrillic), English support
@@ -113,6 +113,7 @@
 - `GET /api/invoices/{invoiceNumber}` - Get specific invoice details
 - `POST /mock/lock` - Set service to unavailable state (current_api_attention=404)
 - `POST /mock/unlock` - Set service to available state (current_api_attention=200)
+- `GET /mock/current_api_attention` - Get current service availability status
 
 ### Authentication Pattern
 ```python
@@ -138,8 +139,8 @@ journal = "=========== FISKALNI RAČUN ===========\n" + detailed_content
 ### Configurable Constants
 ```python
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # Authentication
-PIN = "4321"                              # Security PIN
-GSC_CODE = "9999"                            # Device status (9999=OK, 1300=no security, 1500=PIN needed)
+PIN = "0A10015"                          # Security PIN
+current_api_attention = 404               # Service availability (404=unavailable, 200=available)
 BUSINESS_NAME = "Sigma-com doo Zenica"       # Company info
 BUSINESS_ADDRESS = "Ulica 7. Muslimanske brigade 77"
 DISTRICT = "Zenica"
@@ -210,8 +211,14 @@ else:
 # Development mode
 uvicorn ofs_mockup_srv.main:app --reload --port 8200
 
-# Production mode  
+# Production mode (default: unavailable)
 ofs-mockup-srv
+
+# Start as available
+ofs-mockup-srv --available
+
+# Start as unavailable (explicit)
+ofs-mockup-srv --unavailable
 ```
 
 ### Testing Invoice Processing
@@ -227,7 +234,7 @@ curl --location 'http://localhost:8200/api/invoices' \
 curl --location 'http://localhost:8200/api/pin' \
 --header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
 --header 'Content-Type: text/plain' \
---data '4321'
+--data '0A10015'
 ```
 
 ### Custom Configuration

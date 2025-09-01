@@ -30,7 +30,7 @@ Each command maps to tools configured in `pyproject.toml`.
 Or via Makefile:
 ```bash
 make install-dev
-make run-gsc GSC=1500 PORT=8200
+make run-unavailable PORT=8200
 make test
 make demo        # runs both PIN and invoice flows
 make demo-pin    # PIN-only flow
@@ -38,10 +38,10 @@ make demo-invoice
 ```
 
 ## Mock Controls & CLI
-- `POST /mock/lock` (Bearer): set GSC to `1500` (PIN required), reset fail counter.
-- `POST /api/pin` (text/plain): correct PIN → `0100` and GSC `9999`; 3 wrong 4‑digit attempts lock to GSC `1300` (PIN ignored afterwards).
-- `GET /api/attention` (Bearer): returns current GSC (`1300|1500|9999`).
-- Start options: `ofs-mockup-srv --gsc 1500 --port 8200`.
+- `POST /mock/lock` (Bearer): set service unavailable (HTTP 404 from /api/attention), reset fail counter.
+- `POST /api/pin` (text/plain): correct PIN → `0100` and service available (HTTP 200); 3 wrong 4‑digit attempts lock to unavailable (HTTP 404, PIN ignored afterwards).
+- `GET /api/attention` (Bearer): returns HTTP 200 (available) or 404 (unavailable).
+- Start options: `ofs-mockup-srv --unavailable --port 8200`.
 
 ## Monorepo/Subproject Notes
 - This package lives under `packages/bringout-ofs-mockup-srv/` in the parent repo.
@@ -67,7 +67,7 @@ make demo-invoice
 - Include before/after behavior and screenshots only if UI is involved.
 
 ## Security & Configuration Tips
-- Default API key, PIN, and GSC live in `ofs_mockup_srv/main.py` for local use; do not commit real secrets.
+- Default API key and PIN live in `ofs_mockup_srv/main.py` for local use; do not commit real secrets.
 - Prefer env vars or config injection for deployments; document changes in `doc/`.
 - Default dev port is `8200`. Validate auth on every endpoint in tests.
 

@@ -251,7 +251,7 @@ graph TB
         API_CONFIG[API_KEY - Authentication]
         BUSINESS_CONFIG[BUSINESS_NAME, ADDRESS - Company Info]
         SECURITY_CONFIG[PIN - Security Element]
-        DEVICE_CONFIG[GSC_CODE - Device Status]
+        SERVICE_CONFIG[current_api_attention - Service Availability]
         LANG_CONFIG[SEND_CIRILICA - Language Settings]
     end
     
@@ -263,7 +263,7 @@ graph TB
     API_CONFIG --> SERVER_CONFIG
     BUSINESS_CONFIG --> SERVER_CONFIG
     SECURITY_CONFIG --> SERVER_CONFIG
-    DEVICE_CONFIG --> SERVER_CONFIG
+    SERVICE_CONFIG --> SERVER_CONFIG
     LANG_CONFIG --> SERVER_CONFIG
 ```
 

@@ -146,15 +146,16 @@ The documentation includes various Mermaid diagrams:
 ```python
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"  # Authentication
 PIN = "4321"                                  # Security PIN
-GSC_CODE = "9999"                            # Device status
+current_api_attention = 200                  # Service availability (200=available, 404=unavailable)
 BUSINESS_NAME = "Your Test Company"          # Company info
 SEND_CIRILICA = True                         # Language setting
 ```
 
 ### Test Scenarios
-- **Normal Operations** - GSC_CODE = "9999"
-- **Security Issues** - GSC_CODE = "1300"  
-- **PIN Required** - GSC_CODE = "1500"
+- **Service Available** - current_api_attention = 200 (HTTP 200 from `/api/attention`)
+- **Service Unavailable** - current_api_attention = 404 (HTTP 404 from `/api/attention`)
+- **Mock Control** - Use `/mock/lock` (sets to 404) and `/mock/unlock` (sets to 200)
+- **PIN Authentication** - Use `/api/pin` to change service from unavailable to available
 - **Error Simulation** - Invoice number "ERROR"
 
 ## Usage Examples

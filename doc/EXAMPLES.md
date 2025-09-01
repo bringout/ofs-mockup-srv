@@ -223,13 +223,21 @@ curl --location "$BASE_URL/api/settings" \
 
 ### Set Service Unavailable
 
-Set the service to unavailable state (404 response from /api/attention):
+Set the service to unavailable state (404 response from /api/attention).
+Supports both GET and POST requests:
 
+#### POST Request
 ```bash
 curl --location "$BASE_URL/mock/lock" \
 --header "Authorization: Bearer $API_KEY" \
 --header "Content-Type: application/json" \
 --data '{}'
+```
+
+#### GET Request
+```bash
+curl --location "$BASE_URL/mock/lock" \
+--header "Authorization: Bearer $API_KEY"
 ```
 
 **Response:**
@@ -241,13 +249,21 @@ curl --location "$BASE_URL/mock/lock" \
 
 ### Set Service Available
 
-Set the service to available state (200 response from /api/attention):
+Set the service to available state (200 response from /api/attention).
+Supports both GET and POST requests:
 
+#### POST Request
 ```bash
 curl --location "$BASE_URL/mock/unlock" \
 --header "Authorization: Bearer $API_KEY" \
 --header "Content-Type: application/json" \
 --data '{}'
+```
+
+#### GET Request
+```bash
+curl --location "$BASE_URL/mock/unlock" \
+--header "Authorization: Bearer $API_KEY"
 ```
 
 **Response:**

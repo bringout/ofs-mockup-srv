@@ -13,7 +13,7 @@ This server provides a complete mockup implementation of the OFS API specificati
 - **Tax Category Simulation** - Configurable VAT rates and tax categories
 - **Invoice Processing** - Normal sales, refunds, copies, advances, and training receipts  
 - **Receipt Search** - Search invoices by date range, amount, type, and payment method
-- **Status Simulation** - Realistic device status responses including GSC codes
+- **Status Simulation** - Realistic device status responses with HTTP-based availability
 - **PIN Authentication** - Simulates security element PIN entry
 - **Configurable Responses** - Easy customization of business data and responses
 
@@ -45,8 +45,9 @@ python -m ofs_mockup_srv.main
 # Or with uvicorn
 uvicorn ofs_mockup_srv.main:app --reload --port 8200
 
-# Optional: set initial GSC and port via CLI
-ofs-mockup-srv --gsc 1500 --port 8200
+# Optional: set initial availability and port via CLI
+ofs-mockup-srv --unavailable --port 8200  # Start as unavailable
+ofs-mockup-srv --available --port 8200    # Start as available
 ```
 
 ### Makefile Shortcuts
@@ -55,8 +56,8 @@ ofs-mockup-srv --gsc 1500 --port 8200
 # Install dev deps
 make install-dev
 
-# Run with initial GSC and port
-make run-gsc GSC=1500 PORT=8200
+# Run with initial availability and port
+make run-unavailable PORT=8200
 
 # Run demos
 make demo         # PIN + invoice flows
@@ -77,7 +78,7 @@ Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 ### Core Endpoints
 
 - `GET /` - Health check
-- `GET /api/attention` - Returns current GSC state: `"1300" | "1500" | "9999"`
+- `GET /api/attention` - Service availability check (HTTP 200=available, 404=unavailable)
 - `GET /api/status` - Device status and tax rates
 - `POST /api/pin` - PIN authentication for security element
 - `POST /api/invoices` - Process fiscal invoices
@@ -86,13 +87,13 @@ Authorization: Bearer api_key_0123456789abcdef0123456789abcdef
 
 ### Mock Controls
 
-- `POST /mock/lock` (Bearer): Force PIN-required state (sets GSC to `"1500"` and resets fail counter).
+- `POST /mock/lock` (Bearer): Set service to unavailable state (HTTP 404 from /api/attention) and reset fail counter.
 - `POST /api/pin` (text/plain):
-  - Correct PIN → response `"0100"`, sets GSC `"9999"`, resets counter.
+  - Correct PIN → response `"0100"`, sets service available (HTTP 200), resets counter.
   - Wrong 4-digit PIN → response `"2400"`, counts toward lockout.
-  - After 3 wrong 4-digit attempts → response `"1300"`, sets GSC `"1300"` (subsequent PINs return `"1300"`).
+  - After 3 wrong 4-digit attempts → response `"1300"`, sets service unavailable (HTTP 404, subsequent PINs return `"1300"`).
 
-### PIN & Lockout Walkthrough (curl)
+### PIN & Service Availability Walkthrough (curl)
 
 ```bash
 # Assume server at http://localhost:8200 and default API key
@@ -103,22 +104,22 @@ curl -s -X POST \
   -H "Authorization: Bearer $API" \
   http://localhost:8200/mock/lock
 
-# 2) Attention shows 1500 (PIN required)
+# 2) Attention shows HTTP 404 (service unavailable)
 curl -s -H "Authorization: Bearer $API" \
   http://localhost:8200/api/attention
 
-# 3) Enter correct PIN (text/plain) → "0100" and unlock to 9999
+# 3) Enter correct PIN (text/plain) → "0100" and set service available
 curl -s -X POST \
   -H "Authorization: Bearer $API" \
   -H "Content-Type: text/plain" \
   --data '0A10015' \
   http://localhost:8200/api/pin
 
-# 4) Attention now shows 9999
+# 4) Attention now returns HTTP 200 (service available)
 curl -s -H "Authorization: Bearer $API" \
   http://localhost:8200/api/attention
 
-# Lockout demo: 3 wrong 4-digit attempts → 1300
+# Lockout demo: 3 wrong 4-digit attempts → service unavailable
 curl -s -X POST -H "Authorization: Bearer $API" http://localhost:8200/mock/lock
 for P in 0000 1111 2222; do
   curl -s -X POST \
@@ -128,7 +129,7 @@ for P in 0000 1111 2222; do
     http://localhost:8200/api/pin; echo
 done
 
-# Attention now shows 1300; further /api/pin returns 1300
+# Attention now returns HTTP 404; further /api/pin returns 1300
 curl -s -H "Authorization: Bearer $API" http://localhost:8200/api/attention
 curl -s -X POST -H "Authorization: Bearer $API" -H "Content-Type: text/plain" \
   --data '0A10015' http://localhost:8200/api/pin
@@ -139,7 +140,7 @@ Quick script: `bash scripts/demo_flows.sh all` (or `pin` / `invoice`).
 ### Configuration
 
 - API key and PIN defaults live in `ofs_mockup_srv/main.py` for local use.
-- GSC is dynamic at runtime. Set initial value with `--gsc {1300|1500|9999}`.
+- Service availability is dynamic at runtime. Set initial state with `--available` or `--unavailable` flags.
 - Business metadata can be adjusted in `main.py` for demos.
 
 ## Usage Examples
@@ -263,7 +264,7 @@ pytest --cov=ofs_mockup_srv
 
 ### Sequence Diagrams
 
-See `doc/SEQUENCES.md` for Mermaid diagrams of PIN unlock, 3-strike lockout, and `--gsc` initialization flows.
+See `doc/SEQUENCES.md` for Mermaid diagrams of PIN unlock, 3-strike lockout, and service availability flows.
 
 ### Invoice Walkthrough (curl)
 
