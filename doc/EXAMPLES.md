@@ -112,7 +112,7 @@ curl --location "$BASE_URL/api/invoices" \
     "payment": [{"amount": 100.00, "paymentType": "Cash"}],
     "items": [{"name": "Test", "labels": ["E"], "totalAmount": 100.00, "unitPrice": 50.00, "quantity": 2.0}],
     "cashier": "Demo"
-  }
+   }
 }'
 ```
 
@@ -134,6 +134,25 @@ Expected console log (excerpt):
      "totalAmount": 100.0,
      ...
    }
+```
+
+### Example: Debugging /api/pin (text/plain)
+
+```bash
+curl --location "$BASE_URL/api/pin" \
+--header "Authorization: Bearer $API_KEY" \
+--header "Content-Type: text/plain" \
+--data '4321'
+```
+
+Expected console log (excerpt):
+
+```
+🔵 Request: POST /api/pin
+   Auth: Bearer api_key_0123456789...
+   Body Text: 4321
+🟢 Response: 200 POST /api/pin
+   Data Text: 0100
 ```
 
 ### Process Invoice Copy
