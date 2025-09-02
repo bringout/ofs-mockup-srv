@@ -77,9 +77,63 @@ curl --location "$BASE_URL/api/invoices" \
                 "quantity": 2.000
             }
         ],
-        "cashier": "Radnik 1"
+    "cashier": "Radnik 1"
     }
 }'
+```
+
+## Debug Logging Examples
+
+Enable detailed request/response logging during development to see JSON bodies and statuses printed to the console.
+
+### Start Server with Debug
+
+```bash
+# Using helper script
+python scripts/start_server.py --debug --port 8200
+
+# Or via env var + uvicorn / installed entrypoint
+export OFS_MOCKUP_DEBUG=true
+uvicorn ofs_mockup_srv.main:app --reload --port 8200
+# or
+OFS_MOCKUP_DEBUG=true ofs-mockup-srv --port 8200
+```
+
+### Example: Debugging /api/invoices
+
+```bash
+curl --location "$BASE_URL/api/invoices" \
+--header "Authorization: Bearer $API_KEY" \
+--header "Content-Type: application/json" \
+--data '{
+  "invoiceRequest": {
+    "invoiceType": "Normal",
+    "transactionType": "Sale",
+    "payment": [{"amount": 100.00, "paymentType": "Cash"}],
+    "items": [{"name": "Test", "labels": ["E"], "totalAmount": 100.00, "unitPrice": 50.00, "quantity": 2.0}],
+    "cashier": "Demo"
+  }
+}'
+```
+
+Expected console log (excerpt):
+
+```
+🔵 Request: POST /api/invoices
+   Auth: Bearer api_key_0123456789...
+   Body JSON: {
+     "invoiceRequest": {
+       "invoiceType": "Normal",
+       "transactionType": "Sale",
+       ...
+     }
+   }
+🟢 Response: 200 POST /api/invoices
+   Data JSON: {
+     "invoiceNumber": "AX4F7Y5L-BX4F7Y5L-123",
+     "totalAmount": 100.0,
+     ...
+   }
 ```
 
 ### Process Invoice Copy
