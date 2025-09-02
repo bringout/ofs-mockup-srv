@@ -450,13 +450,22 @@ taxCategoryCustom = TaxCategory(
 
 ### Development Debugging
 
-1. **Enable detailed logging:**
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
+1. **Enable HTTP debug logging (requests + responses):**
+
+Use the helper script or the environment variable to enable the built‑in debug middleware that logs method/path, selected headers, and JSON/text request/response bodies (pretty‑printed, truncated to ~100KB):
+
+```bash
+# Recommended during development
+python scripts/start_server.py --debug --port 8200
+
+# Or enable via env var when running uvicorn/ofs-mockup-srv directly
+export OFS_MOCKUP_DEBUG=true
+uvicorn ofs_mockup_srv.main:app --reload --port 8200
+# or
+OFS_MOCKUP_DEBUG=true ofs-mockup-srv --port 8200
 ```
 
-2. **Add debug prints:**
+2. **Add targeted debug prints (optional):**
 ```python
 @app.post("/api/invoices")
 async def invoice(req: Request, invoice_data: InvoiceData):

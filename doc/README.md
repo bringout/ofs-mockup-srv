@@ -28,7 +28,7 @@ This directory contains comprehensive documentation for the OFS Mockup Server pr
 - Project structure and code organization
 - Testing strategies (manual, automated, performance)
 - Code quality tools and pre-commit hooks
-- Debugging and troubleshooting guidance
+- Debugging (HTTP request/response logging via --debug) and troubleshooting
 - Deployment options and contributing guidelines
 
 ### 📋 [DATA_TYPES.md](DATA_TYPES.md)

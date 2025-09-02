@@ -67,6 +67,26 @@ make demo-invoice # invoice flow only
 
 The server will start at `http://localhost:8200`
 
+### Debug Logging
+
+Enable detailed request/response logging during development:
+
+```bash
+# Easiest: use the helper script
+python scripts/start_server.py --debug --port 8200
+
+# Or via environment variable when running uvicorn/ofs-mockup-srv directly
+export OFS_MOCKUP_DEBUG=true
+uvicorn ofs_mockup_srv.main:app --reload --port 8200
+# or
+OFS_MOCKUP_DEBUG=true ofs-mockup-srv --port 8200
+```
+
+When debug is enabled, the server prints for every call:
+- Request line, query, and selected headers (Bearer token truncated)
+- Request body for JSON/text (pretty-printed, truncated to ~100KB)
+- Response status and JSON/text body (pretty-printed, truncated)
+
 ## API Endpoints
 
 ### Authentication
