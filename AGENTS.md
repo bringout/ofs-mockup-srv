@@ -73,3 +73,20 @@ make demo-invoice
 
 ## Diagrams
 - See `doc/SEQUENCES.md` for Mermaid sequence diagrams of PIN, lockout, and init flows.
+
+## Tools
+
+- use `gh` tool for github repo create/delete, when creating if not mentioned create private repository
+
+- Commit message template (use multiple `-m` flags or heredoc; do not embed `\n`):
+  - Multiple `-m` example:
+    - `git commit -m "feat(scope): subject" -m "- Body line 1" -m "- Body line 2" -m "" -m "🤖 assisted by codex"`
+  - Heredoc example:
+    - `git commit -F - <<'MSG'
+feat(scope): subject
+
+- Body line 1
+- Body line 2
+
+🤖 assisted by codex
+MSG`

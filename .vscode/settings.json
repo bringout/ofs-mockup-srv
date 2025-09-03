@@ -1,3 +1,7 @@
 {
-    "makefile.configureOnOpen": false
+    "makefile.configureOnOpen": false,
+    "workbench.colorTheme": "Cute",
+    "github.copilot.enable": {
+        "*": false
+    }
 }
