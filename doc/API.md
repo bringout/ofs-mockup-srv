@@ -2,7 +2,8 @@
 
 ## Overview
 
-The OFS Mockup Server provides a complete REST API simulation of Open Fiscal Server functionality for testing fiscal device integration. All endpoints (except root) require API key authentication and return realistic fiscal device responses.
+The OFS Mockup Server provides a complete REST API simulation of [Operater fiskalnog sistema](https://ofs.ba).
+Open Fiscal Server functionality for testing fiscal device integration. All endpoints (except root) require API key authentication and return realistic fiscal device responses.
 
 ## Base URL
 
@@ -201,6 +202,18 @@ Content-Type: application/json
     "invoiceType": "Normal",
     "transactionType": "Sale",
     "cashier": "Test Cashier",
+    "buyerId": "VP:123456789",
+    "print": false,
+    "renderReceiptImage": true,
+    "receiptLayout": "Invoice",
+    "receiptImageFormat": "Pdf",
+    "receiptSlipWidth": 386,
+    "receiptSlipFontSizeNormal": 23,
+    "receiptSlipFontSizeLarge": 27,
+    "receiptHeaderImage": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMAAQAABQABDQot2wAAAABJRU5ErkJggg==",
+    "receiptFooterImage": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMAAQAABQABDQot2wAAAABJRU5ErkJggg==",
+    "receiptHeaderTextLines": ["Header Line 1", "Header Line 2"],
+    "receiptFooterTextLines": ["Footer Line 1", "Footer Line 2"],
     "payment": [
       {
         "amount": 100.00,
@@ -210,6 +223,7 @@ Content-Type: application/json
     "items": [
       {
         "name": "Test Product",
+        "gtin": "12345678901",
         "labels": ["E"],
         "totalAmount": 100.00,
         "unitPrice": 50.00,
@@ -229,16 +243,29 @@ Content-Type: application/json
 | `invoiceType` | string | Yes | "Normal", "Copy", "Proforma", "Training", "Advance" |
 | `transactionType` | string | Yes | "Sale", "Refund" |
 | `cashier` | string | Yes | Cashier name |
+| `buyerId` | string | No | Buyer identification (max 20 ASCII chars, VP: prefix for grossale) |
 | `payment` | array | Yes | Payment information |
 | `items` | array | Yes | Invoice line items |
 | `referentDocumentNumber` | string | Conditional | Required for "Copy" and "Refund" |
 | `referentDocumentDT` | string | Conditional | Required for "Copy" and "Refund" |
+| `print` | boolean | No | Set to `false` to skip internal printer |
+| `renderReceiptImage` | boolean | No | Set to `true` to generate receipt image |
+| `receiptLayout` | string | No | "Invoice" (A4) or "Slip" (receipt format) |
+| `receiptImageFormat` | string | No | "Pdf" or "Png" |
+| `receiptSlipWidth` | number | No | Slip width in pixels (386 for 58mm, 576 for 80mm) |
+| `receiptSlipFontSizeNormal` | number | No | Normal text font size for slip format |
+| `receiptSlipFontSizeLarge` | number | No | Large text font size for slip format |
+| `receiptHeaderImage` | string | No | Base64 encoded header image |
+| `receiptFooterImage` | string | No | Base64 encoded footer image |
+| `receiptHeaderTextLines` | array[string] | No | Header text lines for receipt |
+| `receiptFooterTextLines` | array[string] | No | Footer text lines for receipt |
 
 **Item Fields:**
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Product name |
+| `gtin` | string | Yes | GTIN (barcode) - 8-14 characters |
 | `labels` | array | Yes | Tax labels ["E", "K", "A", "D", "F", "G"] |
 | `totalAmount` | float | Yes | Total amount for item |
 | `unitPrice` | float | Yes | Unit price |
@@ -263,7 +290,7 @@ Content-Type: application/json
   "invoiceCounter": "100/123ZE",
   "invoiceCounterExtension": "ZE", 
   "invoiceImageHtml": null,
-  "invoiceImagePdfBase64": null,
+  "invoiceImagePdfBase64": "JVBERi0xLjcKJcOkw7zDtsOfCjIgMCBvYmoKPDw...",
   "invoiceImagePngBase64": null,
   "invoiceNumber": "AX4F7Y5L-BX4F7Y5L-123",
   "journal": "=========== FISKALNI RAČUN ===========\n             4402692070009            \n       Sigma-com doo Zenica      \n...",
@@ -293,12 +320,112 @@ Content-Type: application/json
 }
 ```
 
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `invoiceImagePdfBase64` | string\|null | Base64 encoded PDF receipt when `print=false` and `renderReceiptImage=true` with `receiptImageFormat="Pdf"` |
+| `invoiceImagePngBase64` | string\|null | Base64 encoded PNG receipt when `print=false` and `renderReceiptImage=true` with `receiptImageFormat="Png"` |
+
 **Error Response:**
 ```http
 HTTP 400 Bad Request
 {
   "detail": "Copy ne sadrzi referentDocumentNumber and DT"
 }
+```
+
+---
+
+### Print to Other Printer (External Printer Support)
+
+The API supports printing receipts to external printers by generating receipt images instead of using the internal OFS printer.
+
+#### Configuration Parameters
+
+To print to another printer, set the following parameters in your invoice request:
+
+- `print`: `false` - Skip internal printer
+- `renderReceiptImage`: `true` - Generate receipt image  
+- `receiptLayout`: `"Invoice"` (A4 format) or `"Slip"` (receipt format)
+- `receiptImageFormat`: `"Pdf"` or `"Png"`
+
+For slip format, additional parameters:
+- `receiptSlipWidth`: Width in pixels (386 for 58mm paper, 576 for 80mm paper)
+- `receiptSlipFontSizeNormal`: Normal text font size (recommended: 23 for 58mm, 25 for 80mm)
+- `receiptSlipFontSizeLarge`: Large text font size (recommended: 27 for 58mm, 30 for 80mm)
+
+#### Receipt Customization
+
+**Header and Footer Images:**
+- `receiptHeaderImage`: Base64 encoded image for receipt header
+- `receiptFooterImage`: Base64 encoded image for receipt footer
+
+**Header and Footer Text:**
+- `receiptHeaderTextLines`: Array of text lines for receipt header
+- `receiptFooterTextLines`: Array of text lines for receipt footer
+
+#### Example Request
+
+```json
+{
+  "invoiceRequest": {
+    "invoiceType": "Normal",
+    "transactionType": "Sale",
+    "print": false,
+    "renderReceiptImage": true,
+    "receiptLayout": "Invoice",
+    "receiptImageFormat": "Pdf",
+    "receiptHeaderTextLines": ["Custom Header Line 1", "Custom Header Line 2"],
+    "receiptFooterTextLines": ["Custom Footer Line"],
+    "cashier": "External Printer Test",
+    "payment": [{"amount": 100.00, "paymentType": "Cash"}],
+    "items": [{
+      "name": "Test Product",
+      "gtin": "12345678901",
+      "labels": ["E"],
+      "totalAmount": 100.00,
+      "unitPrice": 100.00,
+      "quantity": 1.0
+    }]
+  }
+}
+```
+
+#### Response
+
+When `print=false` and `renderReceiptImage=true`, the response includes:
+
+- `invoiceImagePdfBase64`: Base64 encoded PDF when `receiptImageFormat="Pdf"`
+- `invoiceImagePngBase64`: Base64 encoded PNG when `receiptImageFormat="Png"`
+
+#### Console Logging
+
+The server logs the following information to the console:
+
+**Image Processing:**
+```
+Image header 67 bytes.  # When receiptHeaderImage is valid base64
+Image footer 67 bytes.  # When receiptFooterImage is valid base64  
+ERROR: receiptHeaderImage is not base64 encoded string  # When invalid
+ERROR: receiptFooterImage is not base64 encoded string  # When invalid
+```
+
+**Text Lines:**
+```
+HEADER:
+- Header Line 1
+- Header Line 2
+
+FOOTER:
+- Footer Line 1
+- Footer Line 2
+```
+
+**Buyer ID and GTIN:**
+```
+buyerId: VP:123456789, if OFS system is registering grossale this field should start with: VP:
+gtin: 12345678901  # For each item
 ```
 
 ---
@@ -391,7 +518,7 @@ GET /api/invoices/RX4F7Y5L-RX4F7Y5L-138?receiptLayout=Slip&imageFormat=Png&inclu
         "articleUuid": null,
         "discount": null,
         "discountAmount": null, 
-        "gtin": null,
+        "gtin": "12345678",
         "labels": ["E"],
         "name": "Artikl 1",
         "plu": null,
@@ -573,15 +700,46 @@ curl --location 'http://localhost:8200/api/invoices' \
   "invoiceRequest": {
     "invoiceType": "Normal",
     "transactionType": "Sale",
+    "buyerId": "VP:123456789",
     "payment": [{"amount": 100.00, "paymentType": "Cash"}],
     "items": [{
       "name": "Test Product",
+      "gtin": "12345678901",
       "labels": ["E"],
       "totalAmount": 100.00,
       "unitPrice": 50.00,
       "quantity": 2.000
     }],
     "cashier": "Test Cashier"
+  }
+}'
+```
+
+#### Process Invoice with External Printer
+```bash
+curl --location 'http://localhost:8200/api/invoices' \
+--header 'Authorization: Bearer api_key_0123456789abcdef0123456789abcdef' \
+--header 'Content-Type: application/json' \
+--data '{
+  "invoiceRequest": {
+    "invoiceType": "Normal",
+    "transactionType": "Sale",
+    "print": false,
+    "renderReceiptImage": true,
+    "receiptLayout": "Invoice",
+    "receiptImageFormat": "Pdf",
+    "receiptHeaderTextLines": ["Custom Header"],
+    "receiptFooterTextLines": ["Thank you for your purchase!"],
+    "payment": [{"amount": 50.00, "paymentType": "Card"}],
+    "items": [{
+      "name": "External Print Test",
+      "gtin": "98765432109",
+      "labels": ["E"],
+      "totalAmount": 50.00,
+      "unitPrice": 50.00,
+      "quantity": 1.0
+    }],
+    "cashier": "External Printer"
   }
 }'
 ```
@@ -600,6 +758,7 @@ curl --location 'http://localhost:8200/api/invoices' \
     "payment": [{"amount": 100.00, "paymentType": "Cash"}],
     "items": [{
       "name": "Refunded Product",
+      "gtin": "12345678901",
       "labels": ["E"],
       "totalAmount": 100.00,
       "unitPrice": 50.00,
@@ -624,6 +783,7 @@ curl --location 'http://localhost:8200/api/invoices' \
     "payment": [{"amount": 100.00, "paymentType": "Cash"}],
     "items": [{
       "name": "Original Product",
+      "gtin": "12345678901",
       "labels": ["E"],
       "totalAmount": 100.00,
       "unitPrice": 50.00,
@@ -769,9 +929,13 @@ invoice_data = {
         "invoiceType": "Normal",
         "transactionType": "Sale",
         "cashier": "Python Client",
+        "buyerId": "VP:PYTHON123",
+        "receiptHeaderTextLines": ["Python Integration Test"],
+        "receiptFooterTextLines": ["Generated via Python API"],
         "payment": [{"amount": 50.0, "paymentType": "Card"}],
         "items": [{
             "name": "Python Test Item",
+            "gtin": "12345678901",
             "labels": ["E"],
             "totalAmount": 50.0,
             "unitPrice": 25.0,

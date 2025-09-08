@@ -1,4 +1,5 @@
 import argparse
+import base64
 import datetime
 import json
 import os
@@ -428,6 +429,7 @@ class PaymentLine(BaseModel):
 
 class ItemLine(BaseModel):
     name: str
+    gtin: str
     labels: list[str] = []
     totalAmount: float
     unitPrice: float
@@ -444,6 +446,18 @@ class InvoiceRequest(BaseModel):
     payment: list[PaymentLine] = []
     items: list[ItemLine] = []
     cashier: str
+    buyerId: str | None = None
+    print: bool | None = None
+    renderReceiptImage: bool | None = None
+    receiptLayout: str | None = None
+    receiptImageFormat: str | None = None
+    receiptSlipWidth: int | None = None
+    receiptSlipFontSizeNormal: int | None = None
+    receiptSlipFontSizeLarge: int | None = None
+    receiptHeaderImage: str | None = None
+    receiptFooterImage: str | None = None
+    receiptHeaderTextLines: list[str] | None = None
+    receiptFooterTextLines: list[str] | None = None
 
 
 class InvoiceData(BaseModel):
@@ -494,6 +508,18 @@ async def invoice(req: Request, invoice_data: InvoiceData):
 
     type = invoice_data.invoiceRequest.invoiceType
     cashier = invoice_data.invoiceRequest.cashier
+    buyerId = invoice_data.invoiceRequest.buyerId
+    print_receipt = invoice_data.invoiceRequest.print
+    render_receipt_image = invoice_data.invoiceRequest.renderReceiptImage
+    receipt_layout = invoice_data.invoiceRequest.receiptLayout
+    receipt_image_format = invoice_data.invoiceRequest.receiptImageFormat
+    receipt_slip_width = invoice_data.invoiceRequest.receiptSlipWidth
+    receipt_slip_font_size_normal = invoice_data.invoiceRequest.receiptSlipFontSizeNormal
+    receipt_slip_font_size_large = invoice_data.invoiceRequest.receiptSlipFontSizeLarge
+    receipt_header_image = invoice_data.invoiceRequest.receiptHeaderImage
+    receipt_footer_image = invoice_data.invoiceRequest.receiptFooterImage
+    receipt_header_text_lines = invoice_data.invoiceRequest.receiptHeaderTextLines
+    receipt_footer_text_lines = invoice_data.invoiceRequest.receiptFooterTextLines
 
     # items_length = len(invoice_data.invoiceRequest.items)
     referentDocumentNumber = invoice_data.invoiceRequest.referentDocumentNumber
@@ -504,6 +530,53 @@ async def invoice(req: Request, invoice_data: InvoiceData):
     print("cahiser:", cashier)
     print("invoice request type:", type)
     print("transaction type:", transactionType)
+    
+    # Log buyerId if present
+    if buyerId:
+        print(f"buyerId: {buyerId}, if OFS system is registering grossale this field should start with: VP:")
+    
+    # Log receipt printing parameters
+    if print_receipt is not None:
+        print(f"print: {print_receipt}")
+    if render_receipt_image is not None:
+        print(f"renderReceiptImage: {render_receipt_image}")
+    if receipt_layout is not None:
+        print(f"receiptLayout: {receipt_layout}")
+    if receipt_image_format is not None:
+        print(f"receiptImageFormat: {receipt_image_format}")
+    if receipt_slip_width is not None:
+        print(f"receiptSlipWidth: {receipt_slip_width}")
+    if receipt_slip_font_size_normal is not None:
+        print(f"receiptSlipFontSizeNormal: {receipt_slip_font_size_normal}")
+    if receipt_slip_font_size_large is not None:
+        print(f"receiptSlipFontSizeLarge: {receipt_slip_font_size_large}")
+    
+    # Handle receipt header/footer images
+    if receipt_header_image is not None:
+        try:
+            decoded_header = base64.b64decode(receipt_header_image)
+            print(f"Image header {len(decoded_header)} bytes.")
+        except Exception:
+            print("ERROR: receiptHeaderImage is not base64 encoded string")
+    
+    if receipt_footer_image is not None:
+        try:
+            decoded_footer = base64.b64decode(receipt_footer_image)
+            print(f"Image footer {len(decoded_footer)} bytes.")
+        except Exception:
+            print("ERROR: receiptFooterImage is not base64 encoded string")
+    
+    # Handle receipt header/footer text lines
+    if receipt_header_text_lines is not None and len(receipt_header_text_lines) > 0:
+        print("\nHEADER:")
+        for line in receipt_header_text_lines:
+            print(f"- {line}")
+    
+    if receipt_footer_text_lines is not None and len(receipt_footer_text_lines) > 0:
+        print("\nFOOTER:")
+        for line in receipt_footer_text_lines:
+            print(f"- {line}")
+        print()  # Add extra newline after footer
 
     for payment in invoice_data.invoiceRequest.payment:
         print("paymentType:", payment.paymentType, " ; paymentAmount:", payment.amount)
@@ -537,8 +610,9 @@ async def invoice(req: Request, invoice_data: InvoiceData):
         nDiscount = item.discount or 0.0
         nDiscountAmount = item.discountAmount or 0.00
         label = item.labels[0]
+        print(f"gtin: {item.gtin}")
         cStavka = (
-            "%s quantity: %.2f unitPrice: %.2f discount: %.2f discountAmount: %.2f  totalAmount: %.2f label: %s\r\n"
+            "%s quantity: %.2f unitPrice: %.2f discount: %.2f discountAmount: %.2f  totalAmount: %.2f label: %s gtin: %s\r\n"
             % (
                 item.name,
                 item.quantity,
@@ -547,6 +621,7 @@ async def invoice(req: Request, invoice_data: InvoiceData):
                 nDiscountAmount,
                 item.totalAmount,
                 label,
+                item.gtin,
             )
         )
         cStavke += cStavka
@@ -571,6 +646,31 @@ async def invoice(req: Request, invoice_data: InvoiceData):
             cRacun = "FISKALNI RAČUN"
         else:
             cRacun = "KOPIJA FISKALNOG RAČUNA"
+        
+        # Handle receipt image generation for print=false case
+        invoice_image_pdf_base64 = None
+        invoice_image_png_base64 = None
+        
+        if (print_receipt is False and render_receipt_image is True and 
+            receipt_layout and receipt_image_format):
+            
+            if receipt_image_format == "Pdf" and receipt_layout == "Invoice":
+                # Load test invoice PDF and encode as base64
+                try:
+                    pdf_path = os.path.join(os.path.dirname(__file__), "..", "input", "test_invoice.pdf")
+                    with open(pdf_path, "rb") as f:
+                        pdf_data = f.read()
+                        invoice_image_pdf_base64 = base64.b64encode(pdf_data).decode('utf-8')
+                        print(f"Generated PDF base64 image, length: {len(invoice_image_pdf_base64)}")
+                except Exception as e:
+                    print(f"Error loading test invoice PDF: {e}")
+                    # Fallback to dummy base64
+                    invoice_image_pdf_base64 = "JVBERi0xLjcKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nL1T"
+            
+            elif receipt_image_format == "Png":
+                # Generate dummy PNG base64 for slip format
+                invoice_image_png_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                print(f"Generated PNG base64 image for receipt format")
 
         response = InvoiceResponse(
             address=BUSINESS_ADDRESS,
@@ -580,8 +680,8 @@ async def invoice(req: Request, invoice_data: InvoiceData):
             invoiceCounter="100/" + cInvoiceNumber + "ZE",
             invoiceCounterExtension="ZE",
             invoiceImageHtml=None,
-            invoiceImagePdfBase64=None,
-            invoiceImagePngBase64=None,
+            invoiceImagePdfBase64=invoice_image_pdf_base64,
+            invoiceImagePngBase64=invoice_image_png_base64,
             invoiceNumber=cFullInvoiceNumber,
             journal="=========== "
             + cRacun
@@ -720,7 +820,7 @@ async def get_invoice(
                     "articleUuid": None,
                     "discount": None,
                     "discountAmount": None,
-                    "gtin": None,
+                    "gtin": "12345678",
                     "labels": [CIRILICA_E] if SEND_CIRILICA else ["E"],
                     "name": "Artikl 1",
                     "plu": None,
