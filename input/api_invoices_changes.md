@@ -38,13 +38,13 @@ Response contains:
  
 
 
-## Add to invoiceRqeuest `byerId` field
+## Add to invoiceRqeuest `buyerId` field
 
 add to `invoiceRequest` optional field
 
 `buyerId` (string): identifikator kupca - optional, maximal length `20 characters` (ASCII isključivo) i sadrži identifikaciju kupca (JIB firme, broj lične karte, broj pasoša). 
 
-if `byerId` is sent in request, server should print on console:
+if `buyerId` is sent in request, server should print on console:
 
 buyerId: {byerid_from_request}, if OFS system is registering grossale this field should start with: `VP:`
 
