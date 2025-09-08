@@ -11,6 +11,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 
 API_KEY = "api_key_0123456789abcdef0123456789abcdef"
 SEND_CIRILICA = True
@@ -429,7 +430,7 @@ class PaymentLine(BaseModel):
 
 class ItemLine(BaseModel):
     name: str
-    gtin: str
+    gtin: str | None = None
     labels: list[str] = []
     totalAmount: float
     unitPrice: float
@@ -470,6 +471,12 @@ class TaxItems(BaseModel):
     categoryType: int = 0
     label: str = "F"
     rate: int = 11
+
+
+class ErrorResponse(BaseModel):
+    details: str | None = None
+    message: str
+    statusCode: int = -1
 
 
 class InvoiceResponse(BaseModel):
@@ -577,6 +584,19 @@ async def invoice(req: Request, invoice_data: InvoiceData):
         for line in receipt_footer_text_lines:
             print(f"- {line}")
         print()  # Add extra newline after footer
+    
+    # Validate GTIN for all items
+    for item in invoice_data.invoiceRequest.items:
+        if not item.gtin or item.gtin.strip() == "":
+            error_response = ErrorResponse(
+                details=None,
+                message=f"gtin za artikal {item.name} nije popunjen",
+                statusCode=-1
+            )
+            return JSONResponse(
+                status_code=200,  # Return HTTP 200 but with error in response body
+                content=error_response.model_dump()
+            )
 
     for payment in invoice_data.invoiceRequest.payment:
         print("paymentType:", payment.paymentType, " ; paymentAmount:", payment.amount)

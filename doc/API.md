@@ -327,13 +327,28 @@ Content-Type: application/json
 | `invoiceImagePdfBase64` | string\|null | Base64 encoded PDF receipt when `print=false` and `renderReceiptImage=true` with `receiptImageFormat="Pdf"` |
 | `invoiceImagePngBase64` | string\|null | Base64 encoded PNG receipt when `print=false` and `renderReceiptImage=true` with `receiptImageFormat="Png"` |
 
-**Error Response:**
-```http
-HTTP 400 Bad Request
+**Error Responses:**
+
+**HTTP 400 Bad Request (FastAPI validation errors):**
+```json
 {
   "detail": "Copy ne sadrzi referentDocumentNumber and DT"
 }
 ```
+
+**HTTP 200 OK with Custom Error Format:**
+```json
+{
+  "details": null,
+  "message": "gtin za artikal Test product nije popunjen",
+  "statusCode": -1
+}
+```
+
+**Common Custom Error Scenarios:**
+- Missing GTIN: When any item lacks a `gtin` field
+- Empty GTIN: When `gtin` is an empty string or whitespace
+- Invalid payment amounts: When payment totals don't match invoice totals
 
 ---
 
@@ -607,21 +622,34 @@ Use invoice number `"ERROR"` to trigger error response:
 - `401 Unauthorized` - Invalid or missing API key
 - `500 Internal Server Error` - Server error
 
-### Error Response Format
+### Error Response Formats
 
+**FastAPI Standard Format (HTTP 400/401/500):**
 ```json
 {
   "detail": "Error description"
 }
 ```
 
+**Custom OFS Error Format (HTTP 200):**
+```json
+{
+  "details": null,
+  "message": "Error description in local language",
+  "statusCode": -1
+}
+```
+
 ### Common Errors
 
-| Error | Description | Solution |
-|-------|-------------|----------|
-| Invalid API key | Authorization header missing or incorrect | Use correct Bearer token |
-| Copy without reference | Copy/Refund missing reference document | Provide referentDocumentNumber and referentDocumentDT |
-| Invalid PIN | Wrong PIN format or value | Use 4-digit PIN (default: 4321) |
+| Error | Description | Solution | Format |
+|-------|-------------|----------|--------|
+| Invalid API key | Authorization header missing or incorrect | Use correct Bearer token | FastAPI |
+| Copy without reference | Copy/Refund missing reference document | Provide referentDocumentNumber and referentDocumentDT | FastAPI |
+| Invalid PIN | Wrong PIN format or value | Use 4-digit PIN (default: 4321) | FastAPI |
+| Missing GTIN | Item missing gtin field | Provide valid GTIN for all items | Custom OFS |
+| Empty GTIN | Item has empty or whitespace-only gtin | Provide valid GTIN string | Custom OFS |
+| Invalid payment | Payment amounts don't match totals | Verify payment calculations | Custom OFS |
 
 ## Tax System
 
