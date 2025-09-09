@@ -248,3 +248,90 @@ Modify constants in `main.py` to customize:
 
 ## Instructions
 - `update` and `push`  for this project use `git` commit/push
+
+## NextCloud Package Distribution
+
+### Credentials and Configuration
+- **NextCloud User**: `hernad`
+- **NextCloud API Key**: `HrCjG-jRpJy-QGErA-dKtri-mZH4k`
+- **Upload URL**: `https://next.cloud.out.ba/remote.php/dav/files/hernad@bring.out.ba/packages/`
+
+### Windows-Compatible Upload Utilities
+
+#### 1. Main Windows Utility: `scripts/nextcloud_upload_windows.py`
+**Features:**
+- Handles Windows environment variables reliably
+- Multiple upload modes (wheel, wheelhouse)
+- Can generate batch/PowerShell wrapper scripts
+- Built-in credentials (can be overridden)
+- Comprehensive help and examples
+
+**Common Usage:**
+```bash
+# Direct wheelhouse upload (Windows-compatible)
+python scripts/nextcloud_upload_windows.py --wheelhouse
+
+# Direct wheel upload
+python scripts/nextcloud_upload_windows.py --wheel
+
+# Dry run for testing
+python scripts/nextcloud_upload_windows.py --wheelhouse --dry-run
+
+# Create reusable batch file
+python scripts/nextcloud_upload_windows.py --wheelhouse --create-batch
+
+# Create PowerShell script
+python scripts/nextcloud_upload_windows.py --wheelhouse --create-powershell
+
+# Custom credentials
+python scripts/nextcloud_upload_windows.py --wheelhouse --user myuser --api-key mykey
+```
+
+#### 2. Quick Upload Scripts
+- **`scripts/upload_wheelhouse.bat`** - Ready-to-use batch file for wheelhouse uploads
+- **`scripts/upload_wheelhouse.ps1`** - PowerShell version with colored output
+
+#### 3. Original Script: `scripts/push_to_nextcloud.py`
+**Note**: Requires manual environment variable setup on Windows
+```bash
+# Environment variables required:
+set NC_USER=hernad
+set NC_API_KEY=HrCjG-jRpJy-QGErA-dKtri-mZH4k
+
+# Upload wheelhouse
+python scripts/push_to_nextcloud.py --wheelhouse
+
+# Upload wheel
+python scripts/push_to_nextcloud.py --wheel
+```
+
+### Package Types
+
+#### Wheelhouse (Recommended for Windows)
+- Contains all dependencies for offline installation
+- Generated filename: `ofs_mockup_srv_wheelhouse_windows_v{version}_py{version}_{arch}.zip`
+- Includes: `wheelhouse/` directory + `requirements.txt`
+
+#### Standard Wheel
+- Single wheel file for online installation
+- Generated filename: `bringout_ofs_mockup_srv-{version}-py3-none-any.whl`
+- Requires internet connection for dependency installation
+
+### Memory Aid for Future Use
+
+**Quick Commands:**
+```bash
+# RECOMMENDED: Use Windows-compatible utility
+python scripts/nextcloud_upload_windows.py --wheelhouse
+
+# OR: Use quick batch file
+scripts\upload_wheelhouse.bat
+
+# OR: Use PowerShell
+powershell -ExecutionPolicy Bypass -File scripts\upload_wheelhouse.ps1
+```
+
+**Environment Variable Issues on Windows:**
+- Use `nextcloud_upload_windows.py` instead of direct environment variable setting
+- The utility handles environment variables internally
+- Can generate wrapper scripts for repeated use
