@@ -1,0 +1,9 @@
+# Mock server response `verificatinUrl`
+
+Set this response for `verificationUrl` for every request
+
+```
+"verificationUrl": "https://suf.poreskaupravars.org/v/?vl=A0IzWTJXWjlHQjNZMldaOUcDAAAAAgAAAPQBAAAAAAAAAAABkik/ZhYAAAC7LQd7m8XLi7qLHX0zmm914sRCQ5Zq+DYlBlUnQqsqVBLIXE/whezsjORg7KWxe6dCZQrjc9WiH7NeBD3J5kInjeVwBQa8ITcVZhiT9AuEJguVBHBAqYmakkaM8qX9hRNP/ah1//HLRfGkKTT3VHQucjQyT7yRj4KSwySm4c3sY7mK2PPhX9j3Sq3n3IRWstgOyzxJlGa9JkOfyFEBxW37osv/YvMVDOhDYX3fFUJ/DDChdcIOTlA7eFdXcEyAQmDMd5L5rM4VHn9GVtLb5BRWORRgHhXjnWgmEurKJ8Gtm8a8l+dM9/tv1z7R2C4WDduovRYSzvHv4v+xzhfpHDuYhP2chHsNH8oEdEHPxIYccxS/d7Lry0zZ0K72vXFskrpibcSxahYBpHceQRmG6oHDjQOT4YhjSj/dl0WK2Q/flbk9g6oia/+V0WUlv150MovDSNCuLnkfUOO+FdfPkYp7y9DnsLJIG/RTmMo3qOFJUDCtOmCEowMd6L8TwEhdY+H9FT390C/DMhXZAYYOaThOMIA1xqoPCrFaVLkSPpOAD7/eKsifk+I8oLtjcW8P0Pw2FU3gDOJhLTTVpBvYrtgyTODk18KFTP/VT2Lnbr2cNYYlK+kKjCRSkRVmucYohpEUlDHBshtmApOpqi54mgyYQPZXUwSFZjpNU8wMhMpj6kUeoL1/lkYz1k4xF7omPUQ=" 
+```
+
+Let server return this in every response from the client POST /api/invoices, if no error in client's request

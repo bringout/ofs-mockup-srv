@@ -196,6 +196,7 @@ app.state.current_api_attention = (
 )
 app.state.debug_enabled = os.getenv("OFS_MOCKUP_DEBUG") == "true"
 app.state.pin = os.getenv("OFS_MOCKUP_PIN", PIN)
+app.state.invoice_error = os.getenv("OFS_MOCKUP_INVOICE_ERROR")
 
 
 @app.get("/")
@@ -513,6 +514,26 @@ async def invoice(req: Request, invoice_data: InvoiceData):
 
     # https://github.com/fastapi/fastapi/discussions/9601
 
+    # Check if invoice error simulation is configured
+    if hasattr(app.state, 'invoice_error') and app.state.invoice_error:
+        try:
+            error_parts = app.state.invoice_error.split(':', 1)
+            if len(error_parts) == 2:
+                error_message = error_parts[0]
+                error_code = int(error_parts[1])
+                error_response = ErrorResponse(
+                    details=None,
+                    message=error_message,
+                    statusCode=error_code
+                )
+                return JSONResponse(
+                    status_code=200,  # Return HTTP 200 but with error in response body
+                    content=error_response.model_dump()
+                )
+        except (ValueError, IndexError):
+            # If parsing fails, ignore the error simulation and proceed normally
+            pass
+
     type = invoice_data.invoiceRequest.invoiceType
     cashier = invoice_data.invoiceRequest.cashier
     buyerId = invoice_data.invoiceRequest.buyerId
@@ -741,7 +762,7 @@ async def invoice(req: Request, invoice_data: InvoiceData):
             totalCounter=138,
             transactionTypeCounter=100,
             verificationQRCode="R0lGODlhhAGEAfFAKE",
-            verificationUrl="https://sandbox.suf.poreskaupravars.org/v/?vl=A1JYNEY3WTVMUlg0FAKE=",
+            verificationUrl="https://suf.poreskaupravars.org/v/?vl=A0IzWTJXWjlHQjNZMldaOUcDAAAAAgAAAPQBAAAAAAAAAAABkik/ZhYAAAC7LQd7m8XLi7qLHX0zmm914sRCQ5Zq+DYlBlUnQqsqVBLIXE/whezsjORg7KWxe6dCZQrjc9WiH7NeBD3J5kInjeVwBQa8ITcVZhiT9AuEJguVBHBAqYmakkaM8qX9hRNP/ah1//HLRfGkKTT3VHQucjQyT7yRj4KSwySm4c3sY7mK2PPhX9j3Sq3n3IRWstgOyzxJlGa9JkOfyFEBxW37osv/YvMVDOhDYX3fFUJ/DDChdcIOTlA7eFdXcEyAQmDMd5L5rM4VHn9GVtLb5BRWORRgHhXjnWgmEurKJ8Gtm8a8l+dM9/tv1z7R2C4WDduovRYSzvHv4v+xzhfpHDuYhP2chHsNH8oEdEHPxIYccxS/d7Lry0zZ0K72vXFskrpibcSxahYBpHceQRmG6oHDjQOT4YhjSj/dl0WK2Q/flbk9g6oia/+V0WUlv150MovDSNCuLnkfUOO+FdfPkYp7y9DnsLJIG/RTmMo3qOFJUDCtOmCEowMd6L8TwEhdY+H9FT390C/DMhXZAYYOaThOMIA1xqoPCrFaVLkSPpOAD7/eKsifk+I8oLtjcW8P0Pw2FU3gDOJhLTTVpBvYrtgyTODk18KFTP/VT2Lnbr2cNYYlK+kKjCRSkRVmucYohpEUlDHBshtmApOpqi54mgyYQPZXUwSFZjpNU8wMhMpj6kUeoL1/lkYz1k4xF7omPUQ=",
         )
 
         return response
@@ -899,7 +920,7 @@ async def get_invoice(
             "totalCounter": 138,
             "transactionTypeCounter": 100,
             "verificationQRCode": "R0lGODlhhAGEAfAAAFAKE",
-            "verificationUrl": "https://sandbox.suf.poreskaupravars.org/v/?vl=A1JYNEY3WTVMUlg0RjdZNUyKAAAAZAAAAEBCDwAAAAAAAAABjjFqO+wAAABW/CridWf/AhDKQHvQyoCT3HBCLwZvH/v4JxyQ/63YKX/GXViHprxs3ZGe8VR7lXDR6UKrQCyuZd4rMOpo3JYisQyV0A9AW5QBCzUCLzYkpiyint98f7Vu4FJcFijOMrWekwxh1rjUsLp2WaL0yY+gSWebEEabv4Tq16272j1LukALa2Lo5C3qRyU8HFzSwYky4F7zsVQnqJRoSb7MenE3NnH+O45iLfiA1zOPruW+KrwVwQGi1iUV4ejSXmAsrML+27UMALiGKd11XNaD/XEEyzbLOCYSbEPnepGUSQ6Kh2Zr+J++fNvxm9gfd3P4qqm2au7fu1Cs7W2ow86QQBjRMw+IB0vgnaMjYrwA7m7zhtRseRIZiGGB6pdIQM7enPhPZUfIeKsSTjQ3CCdeSMGpWhDMGileZcTZkkkMVFML8VnFM+l2dhPSoIeJ6llY5RmcfbN5ESXMEYP8LJ58ONeychjKCi/zVhMx0+ox5bWcWsRwBMyIlfFTFAKE=",
+            "verificationUrl": "https://suf.poreskaupravars.org/v/?vl=A0IzWTJXWjlHQjNZMldaOUcDAAAAAgAAAPQBAAAAAAAAAAABkik/ZhYAAAC7LQd7m8XLi7qLHX0zmm914sRCQ5Zq+DYlBlUnQqsqVBLIXE/whezsjORg7KWxe6dCZQrjc9WiH7NeBD3J5kInjeVwBQa8ITcVZhiT9AuEJguVBHBAqYmakkaM8qX9hRNP/ah1//HLRfGkKTT3VHQucjQyT7yRj4KSwySm4c3sY7mK2PPhX9j3Sq3n3IRWstgOyzxJlGa9JkOfyFEBxW37osv/YvMVDOhDYX3fFUJ/DDChdcIOTlA7eFdXcEyAQmDMd5L5rM4VHn9GVtLb5BRWORRgHhXjnWgmEurKJ8Gtm8a8l+dM9/tv1z7R2C4WDtuovRYSzvHv4v+xzhfpHDuYhP2chHsNH8oEdEHPxIYccxS/d7Lry0zZ0K72vXFskrpibcSxahYBpHceQRmG6oHDjQOT4YhjSj/dl0WK2Q/flbk9g6oia/+V0WUlv150MovDSNCuLnkfUOO+FdfPkYp7y9DnsLJIG/RTmMo3qOFJUDCtOmCEowMd6L8TwEhdY+H9FT390C/DMhXZAYYOaThOMIA1xqoPCrFaVLkSPpOAD7/eKsifk+I8oLtjcW8P0Pw2FU3gDOJhLTTVpBvYrtgyTODk18KFTP/VT2Lnbr2cNYYlK+kKjCRSkRVmucYohpEUlDHBshtmApOpqi54mgyYQPZXUwSFZjpNU8wMhMpj6kUeoL1/lkYz1k4xF7omPUQ=",
         },
         "issueCopy": False,
         "print": True,

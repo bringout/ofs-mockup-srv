@@ -74,6 +74,7 @@ Examples:
   python start_server.py --pin 1234        # Set custom PIN
   python start_server.py --debug           # Start with debug logging enabled
   python start_server.py --debug --available --pin 0000  # Debug + available + custom PIN
+  python start_server.py --return-invoice-error "Out of paper:-10"  # Simulate invoice errors
         """
     )
     
@@ -113,6 +114,11 @@ Examples:
         default="4321",
         help="Set PIN for device authentication (default: 4321)"
     )
+    
+    parser.add_argument(
+        "--return-invoice-error",
+        help="Simulate invoice error in format 'message:errorCode' (e.g. 'Out of paper:-10')"
+    )
 
     args = parser.parse_args()
 
@@ -127,12 +133,16 @@ Examples:
     os.environ['OFS_MOCKUP_DEBUG'] = 'true' if args.debug else 'false'
     os.environ['OFS_MOCKUP_PIN'] = args.pin
     os.environ['OFS_MOCKUP_AVAILABLE'] = 'true' if args.available else 'false'
+    if args.return_invoice_error:
+        os.environ['OFS_MOCKUP_INVOICE_ERROR'] = args.return_invoice_error
     
     # Initialize app state from CLI args
     app.state.pin_fail_count = 0
     app.state.current_api_attention = 200 if args.available else 404
     app.state.debug_enabled = args.debug
     app.state.pin = args.pin
+    if args.return_invoice_error:
+        app.state.invoice_error = args.return_invoice_error
 
     print(f"🚀 Starting OFS Mockup Server...", flush=True)
     print(f"   Host: {args.host}", flush=True)
