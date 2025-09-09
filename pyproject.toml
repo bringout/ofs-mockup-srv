@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bringout-ofs-mockup-srv"
-version = "0.3.4"
+version = "0.3.5"
 description = "OFS mockup server for testing fiscal device integration"
 authors = [
     {name = "bring.out doo Sarajevo", email = "podrska@bring.out.ba"}
@@ -42,6 +42,7 @@ dev = [
 
 [project.scripts]
 ofs-mockup-srv = "ofs_mockup_srv.main:main"
+start-ofs-server = "ofs_mockup_srv.start_ofs_server:main"
 
 [project.urls]
 Homepage = "https://github.com/bring-out/bringout-ofs-mockup-srv"
