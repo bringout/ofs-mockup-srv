@@ -337,7 +337,7 @@ def _get_uv_lock_tag(project_root: Path) -> str | None:
     try:
         import datetime as _dt
         ts = lock_path.stat().st_mtime
-        dt = _dt.datetime.utcfromtimestamp(ts)
+        dt = _dt.datetime.fromtimestamp(ts)  # Use local time instead of UTC
         return dt.strftime('%Y%m%d')
     except Exception:
         return None
