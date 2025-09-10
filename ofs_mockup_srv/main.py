@@ -13,7 +13,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
-API_KEY = "api_key_0123456789abcdef0123456789abcdef"
+API_KEY = "dev_api_key_ofs_12345678901234567890"
 SEND_CIRILICA = True
 CIRILICA_E = "Е"
 CIRILICA_K = "К"
@@ -196,6 +196,7 @@ app.state.current_api_attention = (
 )
 app.state.debug_enabled = os.getenv("OFS_MOCKUP_DEBUG") == "true"
 app.state.pin = os.getenv("OFS_MOCKUP_PIN", PIN)
+app.state.api_key = os.getenv("OFS_MOCKUP_API_KEY", API_KEY)
 app.state.invoice_error = os.getenv("OFS_MOCKUP_INVOICE_ERROR")
 
 
@@ -207,8 +208,11 @@ def root():
 def check_api_key(req: Request):
 
     token = req.headers["Authorization"].replace("Bearer ", "").strip()
+    
+    # Use dynamic API key from app state if available, otherwise fallback to constant
+    api_key = getattr(app.state, 'api_key', API_KEY)
 
-    if token != API_KEY:
+    if token != api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized API-KEY %s" % (token),
@@ -947,11 +951,17 @@ def main():
         default="4321",
         help="Set PIN for device authentication (default: 4321)",
     )
+    parser.add_argument(
+        "--api-key",
+        default=API_KEY,
+        help=f"Set custom API key for authentication (default: {API_KEY})",
+    )
     args, _ = parser.parse_known_args()
 
     # Initialize app state from CLI args
     app.state.current_api_attention = 200 if args.available else 404
     app.state.pin = args.pin
+    app.state.api_key = args.api_key
 
     uvicorn.run(
         "ofs_mockup_srv.main:app",

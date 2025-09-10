@@ -72,6 +72,7 @@ Examples:
   python start_server.py --port 3566       # Start on port 3566
   python start_server.py --available       # Start with service available
   python start_server.py --pin 1234        # Set custom PIN
+  python start_server.py --api-key "my_custom_key_123"  # Set custom API key
   python start_server.py --debug           # Start with debug logging enabled
   python start_server.py --debug --available --pin 0000  # Debug + available + custom PIN
   python start_server.py --return-invoice-error "Out of paper:-10"  # Simulate invoice errors
@@ -116,6 +117,11 @@ Examples:
     )
     
     parser.add_argument(
+        "--api-key",
+        help="Set custom API key for authentication (default: dev_api_key_ofs_12345678901234567890)"
+    )
+    
+    parser.add_argument(
         "--return-invoice-error",
         help="Simulate invoice error in format 'message:errorCode' (e.g. 'Out of paper:-10')"
     )
@@ -133,6 +139,8 @@ Examples:
     os.environ['OFS_MOCKUP_DEBUG'] = 'true' if args.debug else 'false'
     os.environ['OFS_MOCKUP_PIN'] = args.pin
     os.environ['OFS_MOCKUP_AVAILABLE'] = 'true' if args.available else 'false'
+    if args.api_key:
+        os.environ['OFS_MOCKUP_API_KEY'] = args.api_key
     if args.return_invoice_error:
         os.environ['OFS_MOCKUP_INVOICE_ERROR'] = args.return_invoice_error
     
@@ -141,6 +149,8 @@ Examples:
     app.state.current_api_attention = 200 if args.available else 404
     app.state.debug_enabled = args.debug
     app.state.pin = args.pin
+    if args.api_key:
+        app.state.api_key = args.api_key
     if args.return_invoice_error:
         app.state.invoice_error = args.return_invoice_error
 
