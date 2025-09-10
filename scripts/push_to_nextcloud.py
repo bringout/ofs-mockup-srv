@@ -385,7 +385,7 @@ def build_windows_wheelhouse_zip(verbose: bool = False):
         with final_req.open('w', encoding='utf-8') as f:
             for d in deps:
                 f.write(d + '\n')
-            f.write(f"ofs-mockup-srv=={version}\n")
+            f.write(f"bringout-ofs-mockup-srv=={version}\n")
     except Exception as e:
         print(f"Error writing requirements files: {e}", file=sys.stderr)
         import shutil as _sh
