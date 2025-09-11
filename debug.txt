@@ -1,0 +1,9 @@
+🚀 Starting OFS Mockup Server...
+   Host: 0.0.0.0
+   Port: 8200
+   Status: Unavailable
+   URL: http://localhost:8200
+   Service: 404 on /api/attention
+   PIN: 1234
+   Debug: Enabled - request/response logging
+
