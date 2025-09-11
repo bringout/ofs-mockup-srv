@@ -453,6 +453,12 @@ class InvoiceRequest(BaseModel):
     items: list[ItemLine] = []
     cashier: str
     buyerId: str | None = None
+    # Print parameters removed - they should only be at root level in InvoiceData
+
+
+class InvoiceData(BaseModel):
+    invoiceRequest: InvoiceRequest
+    # Print-related parameters at root level (outside invoiceRequest)
     print: bool | None = None
     renderReceiptImage: bool | None = None
     receiptLayout: str | None = None
@@ -464,10 +470,6 @@ class InvoiceRequest(BaseModel):
     receiptFooterImage: str | None = None
     receiptHeaderTextLines: list[str] | None = None
     receiptFooterTextLines: list[str] | None = None
-
-
-class InvoiceData(BaseModel):
-    invoiceRequest: InvoiceRequest
 
 
 class TaxItems(BaseModel):
@@ -541,17 +543,19 @@ async def invoice(req: Request, invoice_data: InvoiceData):
     type = invoice_data.invoiceRequest.invoiceType
     cashier = invoice_data.invoiceRequest.cashier
     buyerId = invoice_data.invoiceRequest.buyerId
-    print_receipt = invoice_data.invoiceRequest.print
-    render_receipt_image = invoice_data.invoiceRequest.renderReceiptImage
-    receipt_layout = invoice_data.invoiceRequest.receiptLayout
-    receipt_image_format = invoice_data.invoiceRequest.receiptImageFormat
-    receipt_slip_width = invoice_data.invoiceRequest.receiptSlipWidth
-    receipt_slip_font_size_normal = invoice_data.invoiceRequest.receiptSlipFontSizeNormal
-    receipt_slip_font_size_large = invoice_data.invoiceRequest.receiptSlipFontSizeLarge
-    receipt_header_image = invoice_data.invoiceRequest.receiptHeaderImage
-    receipt_footer_image = invoice_data.invoiceRequest.receiptFooterImage
-    receipt_header_text_lines = invoice_data.invoiceRequest.receiptHeaderTextLines
-    receipt_footer_text_lines = invoice_data.invoiceRequest.receiptFooterTextLines
+    
+    # Print parameters - only from root level (no backward compatibility)
+    print_receipt = invoice_data.print
+    render_receipt_image = invoice_data.renderReceiptImage
+    receipt_layout = invoice_data.receiptLayout
+    receipt_image_format = invoice_data.receiptImageFormat
+    receipt_slip_width = invoice_data.receiptSlipWidth
+    receipt_slip_font_size_normal = invoice_data.receiptSlipFontSizeNormal
+    receipt_slip_font_size_large = invoice_data.receiptSlipFontSizeLarge
+    receipt_header_image = invoice_data.receiptHeaderImage
+    receipt_footer_image = invoice_data.receiptFooterImage
+    receipt_header_text_lines = invoice_data.receiptHeaderTextLines
+    receipt_footer_text_lines = invoice_data.receiptFooterTextLines
 
     # items_length = len(invoice_data.invoiceRequest.items)
     referentDocumentNumber = invoice_data.invoiceRequest.referentDocumentNumber
@@ -685,6 +689,18 @@ async def invoice(req: Request, invoice_data: InvoiceData):
     # print(cStavke)
 
     print("totalValue:", totalValue)
+    
+    # Validate totalValue matches payment amount
+    payment_total = sum(payment.amount for payment in invoice_data.invoiceRequest.payment)
+    print("paymentTotal:", payment_total)
+    
+    if abs(totalValue - payment_total) > 0.01:  # Allow small rounding differences
+        print(f"WARNING: totalValue ({totalValue:.2f}) != paymentTotal ({payment_total:.2f})")
+        return {
+            "details": None,
+            "message": f"Total amount mismatch: calculated {totalValue:.2f} but payment is {payment_total:.2f}",
+            "statusCode": -1
+        }
 
     # payments_length = len(invoice_data.invoiceRequest.payment)
 
