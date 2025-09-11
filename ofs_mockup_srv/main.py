@@ -662,14 +662,19 @@ async def invoice(req: Request, invoice_data: InvoiceData):
         nDiscountAmount = item.discountAmount or 0.00
         label = item.labels[0]
         print(f"gtin: {item.gtin}")
+        
+        # Build discount part conditionally
+        discount_part = f"discount: {nDiscount:.2f}"
+        if item.discountAmount is not None:
+            discount_part += f" discountAmount: {nDiscountAmount:.2f}"
+        
         cStavka = (
-            "%s quantity: %.2f unitPrice: %.2f discount: %.2f discountAmount: %.2f  totalAmount: %.2f label: %s gtin: %s\r\n"
+            "%s quantity: %.2f unitPrice: %.2f %s  totalAmount: %.2f label: %s gtin: %s\r\n"
             % (
                 item.name,
                 item.quantity,
                 item.unitPrice,
-                nDiscount,
-                nDiscountAmount,
+                discount_part,
                 item.totalAmount,
                 label,
                 item.gtin,
