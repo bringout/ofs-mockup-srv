@@ -559,7 +559,7 @@ async def invoice(req: Request, invoice_data: InvoiceData):
     transactionType = invoice_data.invoiceRequest.transactionType
     print()
     print("========== invoice request ===========")
-    print("cahiser:", cashier)
+    print("cashier:", cashier)
     print("invoice request type:", type)
     print("transaction type:", transactionType)
     
@@ -640,6 +640,12 @@ async def invoice(req: Request, invoice_data: InvoiceData):
             )
 
     if transactionType == "Refund":
+        if (not referentDocumentNumber) or (not referentDocumentDT):
+            return {
+                "details": None,
+                "message": "Refund ne sadrzi referentDocumentNumber and referentDocumentDT",
+                "statusCode": -1
+            }
         print(
             "refund referentni fiskalni dokument broj:",
             referentDocumentNumber,
