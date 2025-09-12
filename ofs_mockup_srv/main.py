@@ -653,7 +653,9 @@ async def invoice(req: Request, invoice_data: InvoiceData):
         print(
             "refund referentni fiskalni dokument broj:",
             referentDocumentNumber,
-            "datum:",
+            "datum (raw ISO from client):",
+            repr(referentDocumentDT),
+            "datum (display):",
             referentDocumentDT,
         )
 
